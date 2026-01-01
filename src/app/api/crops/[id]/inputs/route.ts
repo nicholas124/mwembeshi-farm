@@ -9,11 +9,16 @@ export async function POST(
     const { id: plantingId } = await params;
     const body = await request.json();
 
+    // Map frontend fertilizer types to InputType enum
+    // Frontend sends: NPK, UREA, ORGANIC, OTHER
+    // Database expects: FERTILIZER, PESTICIDE, HERBICIDE, FUNGICIDE, SEED, OTHER
+    const inputType = body.inputType || 'FERTILIZER'; // Default to FERTILIZER for fertilizer modal
+
     const input = await prisma.cropInput.create({
       data: {
         plantingId,
         name: body.name,
-        type: body.type,
+        type: inputType,
         quantity: body.quantity,
         unit: body.unit,
         cost: body.cost || null,
@@ -30,7 +35,7 @@ export async function POST(
   } catch (error) {
     console.error('Error creating input:', error);
     return NextResponse.json(
-      { error: 'Failed to create input' },
+      { success: false, error: 'Failed to create input' },
       { status: 500 }
     );
   }

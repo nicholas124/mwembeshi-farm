@@ -641,12 +641,13 @@ function FertilizerModal({ isOpen, onClose, plantingId, onSuccess }: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          type: formData.type,
+          inputType: 'FERTILIZER', // Proper enum value for database
+          fertilizerType: formData.type, // Store the specific fertilizer type (NPK, UREA, etc.) in notes
           quantity: parseFloat(formData.quantity),
           unit: formData.unit,
           cost: formData.cost ? parseFloat(formData.cost) : null,
           appliedDate: formData.appliedDate,
-          notes: formData.notes,
+          notes: formData.notes ? `${formData.type}: ${formData.notes}` : formData.type,
         }),
       });
 
