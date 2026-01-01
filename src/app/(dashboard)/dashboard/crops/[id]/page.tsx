@@ -641,8 +641,7 @@ function FertilizerModal({ isOpen, onClose, plantingId, onSuccess }: any) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
-          inputType: 'FERTILIZER', // Proper enum value for database
-          fertilizerType: formData.type, // Store the specific fertilizer type (NPK, UREA, etc.) in notes
+          inputType: 'FERTILIZER',
           quantity: parseFloat(formData.quantity),
           unit: formData.unit,
           cost: formData.cost ? parseFloat(formData.cost) : null,
@@ -650,6 +649,14 @@ function FertilizerModal({ isOpen, onClose, plantingId, onSuccess }: any) {
           notes: formData.notes ? `${formData.type}: ${formData.notes}` : formData.type,
         }),
       });
+
+      if (!inputResponse.ok) {
+        const errorData = await inputResponse.json();
+        console.error('Input API error:', errorData);
+        alert(`Failed to add fertilizer input: ${errorData.error || 'Unknown error'}`);
+        setIsSubmitting(false);
+        return;
+      }
 
       // Also add to activities
       const activityResponse = await fetch(`/api/crops/${plantingId}/activities`, {
@@ -664,13 +671,16 @@ function FertilizerModal({ isOpen, onClose, plantingId, onSuccess }: any) {
         }),
       });
 
-      if (inputResponse.ok && activityResponse.ok) {
-        onSuccess();
-      } else {
-        alert('Failed to add fertilizer');
+      if (!activityResponse.ok) {
+        const errorData = await activityResponse.json();
+        console.error('Activity API error:', errorData);
+        // Input was added successfully, but activity failed - still consider it a partial success
       }
+
+      onSuccess();
     } catch (error) {
-      alert('Failed to add fertilizer');
+      console.error('Fertilizer submit error:', error);
+      alert('Failed to add fertilizer. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
