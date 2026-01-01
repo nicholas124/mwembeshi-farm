@@ -54,21 +54,24 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Build update data object, only including fields that are provided
+    const updateData: any = {};
+    
+    if (body.cropTypeId) updateData.cropTypeId = body.cropTypeId;
+    if (body.fieldId) updateData.fieldId = body.fieldId;
+    if (body.plantingDate) updateData.plantingDate = new Date(body.plantingDate);
+    if (body.expectedHarvest) updateData.expectedHarvest = new Date(body.expectedHarvest);
+    if (body.areaPlanted !== undefined) updateData.areaPlanted = body.areaPlanted;
+    if (body.seedQuantity !== undefined) updateData.seedQuantity = body.seedQuantity;
+    if (body.seedUnit !== undefined) updateData.seedUnit = body.seedUnit;
+    if (body.seedCost !== undefined) updateData.seedCost = body.seedCost;
+    if (body.status) updateData.status = body.status;
+    if (body.season) updateData.season = body.season;
+    if (body.notes !== undefined) updateData.notes = body.notes;
+
     const planting = await prisma.planting.update({
       where: { id },
-      data: {
-        cropTypeId: body.cropTypeId,
-        fieldId: body.fieldId,
-        plantingDate: body.plantingDate ? new Date(body.plantingDate) : undefined,
-        expectedHarvest: body.expectedHarvest ? new Date(body.expectedHarvest) : null,
-        areaPlanted: body.areaPlanted,
-        seedQuantity: body.seedQuantity,
-        seedUnit: body.seedUnit,
-        seedCost: body.seedCost,
-        status: body.status,
-        season: body.season,
-        notes: body.notes,
-      },
+      data: updateData,
       include: {
         cropType: true,
         field: true,

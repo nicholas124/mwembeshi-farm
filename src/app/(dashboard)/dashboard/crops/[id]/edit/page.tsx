@@ -123,11 +123,14 @@ export default function EditCropPage() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          fieldSize: parseFloat(formData.fieldSize) || 0,
+          cropTypeId: formData.crop, // Map to correct field name
+          areaPlanted: parseFloat(formData.fieldSize) || 0, // Map to correct field name
           seedQuantity: parseFloat(formData.seedQuantity) || null,
           plantingDate: formData.plantingDate ? new Date(formData.plantingDate).toISOString() : null,
           expectedHarvest: formData.expectedHarvest ? new Date(formData.expectedHarvest).toISOString() : null,
+          status: formData.status,
+          season: formData.season,
+          notes: formData.notes,
         }),
       });
 
