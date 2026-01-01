@@ -68,6 +68,7 @@ export default function CropDetailPage({
   const [showFertilizerModal, setShowFertilizerModal] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [showHarvestModal, setShowHarvestModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
   const id = params.id;
 
   useEffect(() => {
@@ -331,7 +332,12 @@ export default function CropDetailPage({
               <TrendingUp className="w-5 h-5 text-green-500" />
               Expenses
             </h3>
-            <button className="text-sm text-green-600 hover:underline">+ Add Expense</button>
+            <button 
+              onClick={() => setShowExpenseModal(true)}
+              className="text-sm text-green-600 hover:underline"
+            >
+              + Add Expense
+            </button>
           </div>
           
           <div className="space-y-2">
@@ -461,6 +467,16 @@ export default function CropDetailPage({
         cropName={crop?.name || ''}
         onSuccess={() => {
           setShowHarvestModal(false);
+          window.location.reload();
+        }}
+      />
+
+      <ExpenseModal 
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        plantingId={id}
+        onSuccess={() => {
+          setShowExpenseModal(false);
           window.location.reload();
         }}
       />
@@ -1054,6 +1070,179 @@ function HarvestModal({ isOpen, onClose, plantingId, cropName, onSuccess }: any)
               className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Recording...' : 'Record Harvest'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ExpenseModal({ isOpen, onClose, plantingId, onSuccess }: any) {
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'FERTILIZER',
+    quantity: '',
+    unit: 'kg',
+    cost: '',
+    appliedDate: new Date().toISOString().split('T')[0],
+    notes: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(`/api/crops/${plantingId}/inputs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          type: formData.type,
+          quantity: parseFloat(formData.quantity),
+          unit: formData.unit,
+          cost: formData.cost ? parseFloat(formData.cost) : null,
+          appliedDate: formData.appliedDate,
+          notes: formData.notes,
+        }),
+      });
+
+      if (response.ok) {
+        onSuccess();
+      } else {
+        alert('Failed to add expense');
+      }
+    } catch (error) {
+      alert('Failed to add expense');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Add Expense / Input</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Item Name *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="e.g., NPK Fertilizer, Herbicide"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Type *
+            </label>
+            <select
+              value={formData.type}
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            >
+              <option value="FERTILIZER">Fertilizer</option>
+              <option value="PESTICIDE">Pesticide</option>
+              <option value="HERBICIDE">Herbicide</option>
+              <option value="FUNGICIDE">Fungicide</option>
+              <option value="SEED">Seed</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Quantity *
+              </label>
+              <input
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                required
+                min="0.01"
+                step="0.01"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Unit
+              </label>
+              <select
+                value={formData.unit}
+                onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="kg">kg</option>
+                <option value="bags">bags</option>
+                <option value="liters">liters</option>
+                <option value="packets">packets</option>
+                <option value="units">units</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Cost (K) *
+            </label>
+            <input
+              type="number"
+              value={formData.cost}
+              onChange={(e) => setFormData({ ...formData, cost: e.target.value })}
+              required
+              min="0"
+              step="0.01"
+              placeholder="Enter cost"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Date *
+            </label>
+            <input
+              type="date"
+              value={formData.appliedDate}
+              onChange={(e) => setFormData({ ...formData, appliedDate: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={2}
+              placeholder="Any additional notes..."
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : 'Add Expense'}
             </button>
           </div>
         </form>
