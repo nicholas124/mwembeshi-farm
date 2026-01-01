@@ -134,6 +134,31 @@ export default function CropDetailPage({
     }
   };
 
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('Are you sure you want to delete this activity?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/crops/${id}/activities/${activityId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Remove the activity from local state
+        setCrop((prev: any) => ({
+          ...prev,
+          activities: prev.activities.filter((a: any) => a.id !== activityId),
+        }));
+      } else {
+        alert('Failed to delete activity');
+      }
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      alert('Failed to delete activity');
+    }
+  };
+
   if (isLoading || !crop) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -308,7 +333,7 @@ export default function CropDetailPage({
           
           <div className="space-y-3">
             {crop.activities.map((activity: any, index: number) => (
-              <div key={activity.id} className="flex gap-3">
+              <div key={activity.id} className="flex gap-3 group">
                 <div className="flex flex-col items-center">
                   <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
                     {activityIcons[activity.type] || <Leaf className="w-4 h-4 text-gray-500" />}
@@ -320,9 +345,18 @@ export default function CropDetailPage({
                 <div className="flex-1 pb-4">
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-gray-900 dark:text-white text-sm">{activity.description}</p>
-                    <p className="text-xs text-gray-500">
-                      {formatDateShort(activity.date)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-gray-500">
+                        {formatDateShort(activity.date)}
+                      </p>
+                      <button
+                        onClick={() => handleDeleteActivity(activity.id)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-opacity"
+                        title="Delete activity"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">By {activity.worker}</p>
                 </div>
