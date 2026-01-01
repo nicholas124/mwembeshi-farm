@@ -44,8 +44,9 @@ export default function CropTypesPage() {
     try {
       const res = await fetch('/api/crop-types');
       if (res.ok) {
-        const data = await res.json();
-        setCropTypes(data);
+        const result = await res.json();
+        // Handle both { success, data } format and direct array format
+        setCropTypes(result.data || result);
       }
     } catch (error) {
       console.error('Error fetching crop types:', error);

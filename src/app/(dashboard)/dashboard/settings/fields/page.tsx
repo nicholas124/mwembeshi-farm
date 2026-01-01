@@ -45,8 +45,9 @@ export default function FieldsPage() {
     try {
       const res = await fetch('/api/fields');
       if (res.ok) {
-        const data = await res.json();
-        setFields(data);
+        const result = await res.json();
+        // Handle both { success, data } format and direct array format
+        setFields(result.data || result);
       }
     } catch (error) {
       console.error('Error fetching fields:', error);
