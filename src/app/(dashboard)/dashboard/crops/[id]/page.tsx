@@ -70,6 +70,7 @@ export default function CropDetailPage({
   const [showHarvestModal, setShowHarvestModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<any>(null);
   const id = params.id;
 
   useEffect(() => {
@@ -156,6 +157,41 @@ export default function CropDetailPage({
     } catch (error) {
       console.error('Error deleting activity:', error);
       alert('Failed to delete activity');
+    }
+  };
+
+  const handleEditActivity = (activity: any) => {
+    setEditingActivity(activity);
+    setShowActivityModal(true);
+  };
+
+  const handleUpdateActivity = async (activityId: string, data: any) => {
+    try {
+      const response = await fetch(`/api/crops/${id}/activities/${activityId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // Update the activity in local state
+        setCrop((prev: any) => ({
+          ...prev,
+          activities: prev.activities.map((a: any) => 
+            a.id === activityId ? { ...a, ...result.data } : a
+          ),
+        }));
+        setEditingActivity(null);
+        return true;
+      } else {
+        alert('Failed to update activity');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating activity:', error);
+      alert('Failed to update activity');
+      return false;
     }
   };
 
@@ -344,11 +380,20 @@ export default function CropDetailPage({
                 </div>
                 <div className="flex-1 pb-4">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">{activity.description}</p>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-gray-500">
-                        {formatDateShort(activity.date)}
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 dark:text-white text-sm">{activity.description}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {formatDateShort(activity.activityDate)} • {activity.type}
                       </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleEditActivity(activity)}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-blue-500 transition-opacity"
+                        title="Edit activity"
+                      >
+                        <Edit className="w-3 h-3" />
+                      </button>
                       <button
                         onClick={() => handleDeleteActivity(activity.id)}
                         className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-opacity"
@@ -358,7 +403,6 @@ export default function CropDetailPage({
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">By {activity.worker}</p>
                 </div>
               </div>
             ))}
@@ -523,10 +567,16 @@ export default function CropDetailPage({
 
       <ActivityModal 
         isOpen={showActivityModal}
-        onClose={() => setShowActivityModal(false)}
+        onClose={() => {
+          setShowActivityModal(false);
+          setEditingActivity(null);
+        }}
         plantingId={id}
+        editingActivity={editingActivity}
+        onUpdate={handleUpdateActivity}
         onSuccess={() => {
           setShowActivityModal(false);
+          setEditingActivity(null);
           window.location.reload();
         }}
       />
@@ -1311,7 +1361,7 @@ function ExpenseModal({ isOpen, onClose, plantingId, onSuccess }: any) {
     </div>
   );
 }
-function ActivityModal({ isOpen, onClose, plantingId, onSuccess }: any) {
+function ActivityModal({ isOpen, onClose, plantingId, onSuccess, editingActivity, onUpdate }: any) {
   const [formData, setFormData] = useState({
     type: 'WEEDING',
     description: '',
@@ -1321,6 +1371,29 @@ function ActivityModal({ isOpen, onClose, plantingId, onSuccess }: any) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Update form data when editingActivity changes
+  useEffect(() => {
+    if (editingActivity) {
+      setFormData({
+        type: editingActivity.type || 'WEEDING',
+        description: editingActivity.description || '',
+        activityDate: editingActivity.activityDate 
+          ? new Date(editingActivity.activityDate).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        cost: editingActivity.cost ? String(editingActivity.cost) : '',
+        notes: editingActivity.notes || '',
+      });
+    } else {
+      setFormData({
+        type: 'WEEDING',
+        description: '',
+        activityDate: new Date().toISOString().split('T')[0],
+        cost: '',
+        notes: '',
+      });
+    }
+  }, [editingActivity, isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -1328,25 +1401,40 @@ function ActivityModal({ isOpen, onClose, plantingId, onSuccess }: any) {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/crops/${plantingId}/activities`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      if (editingActivity) {
+        // Update existing activity
+        const success = await onUpdate(editingActivity.id, {
           type: formData.type,
           description: formData.description || `${formData.type.replace('_', ' ')} activity`,
           activityDate: formData.activityDate,
           cost: formData.cost ? parseFloat(formData.cost) : null,
           notes: formData.notes,
-        }),
-      });
-
-      if (response.ok) {
-        onSuccess();
+        });
+        if (success) {
+          onClose();
+        }
       } else {
-        alert('Failed to add activity');
+        // Create new activity
+        const response = await fetch(`/api/crops/${plantingId}/activities`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: formData.type,
+            description: formData.description || `${formData.type.replace('_', ' ')} activity`,
+            activityDate: formData.activityDate,
+            cost: formData.cost ? parseFloat(formData.cost) : null,
+            notes: formData.notes,
+          }),
+        });
+
+        if (response.ok) {
+          onSuccess();
+        } else {
+          alert('Failed to add activity');
+        }
       }
     } catch (error) {
-      alert('Failed to add activity');
+      alert('Failed to save activity');
     } finally {
       setIsSubmitting(false);
     }
@@ -1355,7 +1443,9 @@ function ActivityModal({ isOpen, onClose, plantingId, onSuccess }: any) {
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Add Activity</h3>
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          {editingActivity ? 'Edit Activity' : 'Add Activity'}
+        </h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1440,7 +1530,7 @@ function ActivityModal({ isOpen, onClose, plantingId, onSuccess }: any) {
               disabled={isSubmitting}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {isSubmitting ? 'Saving...' : 'Add Activity'}
+              {isSubmitting ? 'Saving...' : editingActivity ? 'Update Activity' : 'Add Activity'}
             </button>
           </div>
         </form>

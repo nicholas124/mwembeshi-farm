@@ -64,6 +64,30 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Get a default user if createdById is not provided
+    let createdById = body.createdById;
+    if (!createdById) {
+      const defaultUser = await prisma.user.findFirst({
+        where: { role: 'ADMIN' },
+        select: { id: true }
+      });
+      if (!defaultUser) {
+        // If no admin, get any user
+        const anyUser = await prisma.user.findFirst({
+          select: { id: true }
+        });
+        if (!anyUser) {
+          return NextResponse.json(
+            { success: false, error: 'No users found in system. Please create a user first.' },
+            { status: 400 }
+          );
+        }
+        createdById = anyUser.id;
+      } else {
+        createdById = defaultUser.id;
+      }
+    }
+    
     const task = await prisma.task.create({
       data: {
         title: body.title,
@@ -73,8 +97,8 @@ export async function POST(request: NextRequest) {
         status: 'PENDING',
         dueDate: body.dueDate ? new Date(body.dueDate) : null,
         estimatedHours: body.estimatedHours,
-        createdById: body.createdById,
-        assignedToId: body.assignedToId,
+        createdById: createdById,
+        assignedToId: body.assignedToId || null,
         notes: body.notes,
       },
       include: {
