@@ -166,7 +166,13 @@ export default function DashboardLayout({
           )}
           <Link
             href="/dashboard/settings"
-            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            onClick={() => setSidebarOpen(false)}
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              pathname.startsWith('/dashboard/settings')
+                ? "bg-green-50 text-green-700 dark:bg-green-900/50 dark:text-green-300"
+                : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+            )}
           >
             <Settings className="w-5 h-5" />
             Settings
