@@ -93,6 +93,27 @@ export default function CropsPage() {
     return days;
   };
 
+  const handleDeleteCrop = async (cropId: string, cropName: string) => {
+    if (!confirm(`Are you sure you want to delete "${cropName}"? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/crops/${cropId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setCrops(crops.filter(c => c.id !== cropId));
+      } else {
+        alert('Failed to delete crop. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to delete crop:', error);
+      alert('An error occurred while deleting the crop.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -232,7 +253,11 @@ export default function CropsPage() {
                   >
                     <Edit className="w-4 h-4" />
                   </Link>
-                  <button className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                  <button 
+                    onClick={() => handleDeleteCrop(crop.id, displayName)}
+                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                    title="Delete crop"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

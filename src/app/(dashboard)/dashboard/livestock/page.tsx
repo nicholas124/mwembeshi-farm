@@ -74,6 +74,27 @@ export default function LivestockPage() {
     return 'New';
   };
 
+  const handleDeleteAnimal = async (animalId: string, tag: string) => {
+    if (!confirm(`Are you sure you want to delete animal ${tag}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/animals/${animalId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        setAnimals(animals.filter(a => a.id !== animalId));
+      } else {
+        alert('Failed to delete animal. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to delete animal:', error);
+      alert('An error occurred while deleting the animal.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -222,7 +243,11 @@ export default function LivestockPage() {
                       >
                         <Edit className="w-4 h-4" />
                       </Link>
-                      <button className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400">
+                      <button 
+                        onClick={() => handleDeleteAnimal(animal.id, animal.tag)}
+                        className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+                        title="Delete animal"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -254,9 +279,13 @@ export default function LivestockPage() {
                   <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${statusColors[animal.status]}`}>
                     {animal.status}
                   </span>
-                  <button className="p-2 text-gray-500">
+                  <Link
+                    href={`/dashboard/livestock/${animal.id}`}
+                    className="p-2 text-gray-500"
+                    title="View details"
+                  >
                     <MoreHorizontal className="w-5 h-5" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

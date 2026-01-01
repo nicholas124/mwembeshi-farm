@@ -97,6 +97,25 @@ export default function TasksPage() {
     return new Date(dueDate) < new Date();
   };
 
+  const handleCompleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}/complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      if (response.ok) {
+        setTasks(tasks.map(t => 
+          t.id === taskId ? { ...t, status: 'COMPLETED' } : t
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to complete task:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -210,7 +229,11 @@ export default function TasksPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 flex-1">
-                  <button className="mt-1">
+                  <button 
+                    className="mt-1"
+                    onClick={() => task.status !== 'COMPLETED' && handleCompleteTask(task.id)}
+                    title={task.status === 'COMPLETED' ? 'Task completed' : 'Click to mark as complete'}
+                  >
                     {overdue ? statusIcons['OVERDUE'] : statusIcons[task.status]}
                   </button>
                   <div className="flex-1">
@@ -251,13 +274,21 @@ export default function TasksPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-1">
                   {task.status !== 'COMPLETED' && (
-                    <button className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg">
+                    <button 
+                      onClick={() => handleCompleteTask(task.id)}
+                      className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg"
+                      title="Mark as complete"
+                    >
                       <CheckCircle className="w-4 h-4" />
                     </button>
                   )}
-                  <button className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                  <Link
+                    href={`/dashboard/tasks/${task.id}`}
+                    className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                    title="View details"
+                  >
                     <MoreHorizontal className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </div>

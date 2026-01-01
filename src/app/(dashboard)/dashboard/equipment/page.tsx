@@ -89,6 +89,30 @@ export default function EquipmentPage() {
     return daysUntil <= 30;
   }).length;
 
+  const handleDeleteEquipment = async (equipmentId: string, equipmentName: string) => {
+    if (!confirm(`Are you sure you want to retire "${equipmentName}"? The equipment record will be kept but marked as retired.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/equipment/${equipmentId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Update local state to reflect the retired status
+        setEquipment(equipment.map(e => 
+          e.id === equipmentId ? { ...e, status: 'RETIRED' } : e
+        ));
+      } else {
+        alert('Failed to retire equipment. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to retire equipment:', error);
+      alert('An error occurred while retiring the equipment.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -251,7 +275,11 @@ export default function EquipmentPage() {
                   >
                     <Edit className="w-4 h-4" />
                   </Link>
-                  <button className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                  <button 
+                    onClick={() => handleDeleteEquipment(item.id, item.name)}
+                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                    title="Delete equipment"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

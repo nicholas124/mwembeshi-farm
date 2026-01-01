@@ -98,6 +98,45 @@ export default function ReportsPage() {
     ? Math.max(...data.monthlyTrend.map(d => Math.max(d.revenue, d.expenses)))
     : 0;
 
+  const handleExportReport = () => {
+    // Generate a CSV report
+    let csvContent = "Mwembeshi Farm Report\n";
+    csvContent += `Period: ${period.charAt(0).toUpperCase() + period.slice(1)}\n`;
+    csvContent += `Generated: ${new Date().toLocaleDateString()}\n\n`;
+    
+    // Financial Summary
+    csvContent += "Financial Summary\n";
+    csvContent += `Revenue,ZMW ${data.financial.revenue.toLocaleString()}\n`;
+    csvContent += `Expenses,ZMW ${data.financial.expenses.toLocaleString()}\n`;
+    csvContent += `Net Profit,ZMW ${data.financial.profit.toLocaleString()}\n`;
+    csvContent += `Profit Margin,${data.financial.profitMargin.toFixed(1)}%\n\n`;
+    
+    // Overview
+    csvContent += "Farm Overview\n";
+    csvContent += `Livestock,${data.overview.livestock}\n`;
+    csvContent += `Crops,${data.overview.crops}\n`;
+    csvContent += `Workers,${data.overview.workers}\n`;
+    csvContent += `Equipment,${data.overview.equipment}\n\n`;
+    
+    // Monthly Trend
+    csvContent += "Monthly Trend\n";
+    csvContent += "Month,Livestock,Crops,Revenue,Expenses\n";
+    data.monthlyTrend.forEach(m => {
+      csvContent += `${m.month},${m.livestock},${m.crops},${m.revenue},${m.expenses}\n`;
+    });
+    
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `mwembeshi_farm_report_${period}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -126,7 +165,10 @@ export default function ReportsPage() {
               </button>
             ))}
           </div>
-          <button className="inline-flex items-center gap-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+          <button 
+            onClick={handleExportReport}
+            className="inline-flex items-center gap-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          >
             <Download className="w-4 h-4" />
             Export
           </button>

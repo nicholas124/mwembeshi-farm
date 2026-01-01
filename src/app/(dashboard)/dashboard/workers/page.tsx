@@ -75,6 +75,30 @@ export default function WorkersPage() {
   const departments = Array.from(new Set(workers.map(w => w.department)));
   const presentCount = workers.filter(w => w.presentToday).length;
 
+  const handleDeleteWorker = async (workerId: string, workerName: string) => {
+    if (!confirm(`Are you sure you want to terminate ${workerName}? The worker record will be kept but marked as terminated.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/workers/${workerId}`, {
+        method: 'DELETE',
+      });
+      
+      if (response.ok) {
+        // Update local state to reflect the terminated status
+        setWorkers(workers.map(w => 
+          w.id === workerId ? { ...w, status: 'TERMINATED' } : w
+        ));
+      } else {
+        alert('Failed to terminate worker. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to terminate worker:', error);
+      alert('An error occurred while terminating the worker.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -268,7 +292,11 @@ export default function WorkersPage() {
                   >
                     <Edit className="w-4 h-4" />
                   </Link>
-                  <button className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                  <button 
+                    onClick={() => handleDeleteWorker(worker.id, worker.name)}
+                    className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                    title="Delete worker"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
