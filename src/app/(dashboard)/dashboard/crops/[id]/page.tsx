@@ -360,7 +360,11 @@ export default function CropDetailPage({
               Activity Log
             </h3>
             <button 
-              onClick={() => setShowActivityModal(true)}
+              type="button"
+              onClick={() => {
+                setEditingActivity(null);
+                setShowActivityModal(true);
+              }}
               className="text-sm text-green-600 hover:underline"
             >
               + Add Activity
