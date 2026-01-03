@@ -16,8 +16,7 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Bug,
-  Spray
+  Bug
 } from 'lucide-react';
 import { formatDate, formatDateShort } from '@/lib/utils';
 
