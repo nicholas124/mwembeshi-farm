@@ -35,6 +35,7 @@ model User {
   animalRecords   Animal[]         @relation("RecordedBy")
   treatments      Treatment[]
   harvests        Harvest[]
+  sprayPlansCompleted SprayPlan[]
 
   @@map("users")
 }
@@ -290,6 +291,7 @@ model Planting {
   activities      CropActivity[]
   harvests        Harvest[]
   inputs          CropInput[]
+  sprayPlans      SprayPlan[]
 
   @@index([cropTypeId, status])
   @@index([fieldId, plantingDate])
@@ -382,6 +384,47 @@ enum HarvestQuality {
   GOOD
   FAIR
   POOR
+}
+
+// ==========================================
+// SPRAY PLANS
+// ==========================================
+
+model SprayPlan {
+  id              String        @id @default(cuid())
+  plantingId      String
+  planting        Planting      @relation(fields: [plantingId], references: [id], onDelete: Cascade)
+  
+  name            String        // e.g., "Week 2 Pest Control"
+  pesticide       String        // Name of pesticide/chemical
+  targetPest      String?       // What pest/disease it targets
+  dosage          String        // e.g., "50ml per 20L water"
+  applicationMethod String?     // e.g., "Foliar spray", "Soil drench"
+  
+  scheduledDate   DateTime      // When it should be applied
+  status          SprayPlanStatus @default(PENDING)
+  completedDate   DateTime?     // When it was actually done
+  completedById   String?       // Worker who completed it
+  completedBy     User?         @relation(fields: [completedById], references: [id])
+  
+  weatherConditions String?     // Recommended weather for application
+  safetyPrecautions String?     // Safety notes for workers
+  notes           String?       // Additional instructions
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([plantingId, scheduledDate])
+  @@index([status])
+  @@map("spray_plans")
+}
+
+enum SprayPlanStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+  OVERDUE
 }
 
 // ==========================================

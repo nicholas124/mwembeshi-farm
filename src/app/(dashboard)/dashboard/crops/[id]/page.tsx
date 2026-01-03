@@ -15,7 +15,9 @@ import {
   Leaf,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Bug,
+  Spray
 } from 'lucide-react';
 import { formatDate, formatDateShort } from '@/lib/utils';
 
@@ -70,7 +72,10 @@ export default function CropDetailPage({
   const [showHarvestModal, setShowHarvestModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showSprayPlanModal, setShowSprayPlanModal] = useState(false);
   const [editingActivity, setEditingActivity] = useState<any>(null);
+  const [editingSprayPlan, setEditingSprayPlan] = useState<any>(null);
+  const [sprayPlans, setSprayPlans] = useState<any[]>([]);
   const id = params.id;
 
   useEffect(() => {
@@ -104,6 +109,13 @@ export default function CropDetailPage({
         };
         
         setCrop(transformed);
+        
+        // Fetch spray plans
+        const sprayPlansResponse = await fetch(`/api/crops/${id}/spray-plans`);
+        if (sprayPlansResponse.ok) {
+          const sprayPlansResult = await sprayPlansResponse.json();
+          setSprayPlans(sprayPlansResult.data || []);
+        }
       } catch (error) {
         console.error('Error fetching crop:', error);
       } finally {
@@ -113,6 +125,59 @@ export default function CropDetailPage({
 
     fetchCrop();
   }, [id]);
+
+  const fetchSprayPlans = async () => {
+    try {
+      const response = await fetch(`/api/crops/${id}/spray-plans`);
+      if (response.ok) {
+        const result = await response.json();
+        setSprayPlans(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching spray plans:', error);
+    }
+  };
+
+  const handleDeleteSprayPlan = async (planId: string) => {
+    if (!confirm('Are you sure you want to delete this spray plan?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/crops/${id}/spray-plans/${planId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setSprayPlans(prev => prev.filter(p => p.id !== planId));
+      } else {
+        alert('Failed to delete spray plan');
+      }
+    } catch (error) {
+      console.error('Error deleting spray plan:', error);
+      alert('Failed to delete spray plan');
+    }
+  };
+
+  const handleMarkSprayPlanComplete = async (planId: string) => {
+    try {
+      const response = await fetch(`/api/crops/${id}/spray-plans/${planId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'COMPLETED' }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setSprayPlans(prev => prev.map(p => p.id === planId ? result.data : p));
+      } else {
+        alert('Failed to update spray plan');
+      }
+    } catch (error) {
+      console.error('Error updating spray plan:', error);
+      alert('Failed to update spray plan');
+    }
+  };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this planting? This action cannot be undone.')) {
@@ -452,6 +517,127 @@ export default function CropDetailPage({
         </div>
       </div>
 
+      {/* Pest Spray Plans */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <Bug className="w-5 h-5 text-red-500" />
+            Pest Spray Plans
+          </h3>
+          <button 
+            onClick={() => {
+              setEditingSprayPlan(null);
+              setShowSprayPlanModal(true);
+            }}
+            className="text-sm text-green-600 hover:underline"
+          >
+            + Add Spray Plan
+          </button>
+        </div>
+        
+        {sprayPlans.length === 0 ? (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <Bug className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <p>No spray plans scheduled</p>
+            <p className="text-sm">Add a spray plan to help workers manage pest control</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {sprayPlans.map((plan: any) => {
+              const isOverdue = new Date(plan.scheduledDate) < new Date() && plan.status === 'PENDING';
+              const statusColors: Record<string, string> = {
+                PENDING: isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+                IN_PROGRESS: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+                SKIPPED: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+              };
+              
+              return (
+                <div key={plan.id} className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h4 className="font-medium text-gray-900 dark:text-white">{plan.name}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{plan.pesticide}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[plan.status] || statusColors.PENDING}`}>
+                      {isOverdue ? 'OVERDUE' : plan.status}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Scheduled: </span>
+                      <span className="text-gray-900 dark:text-white">{formatDateShort(plan.scheduledDate)}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 dark:text-gray-400">Dosage: </span>
+                      <span className="text-gray-900 dark:text-white">{plan.dosage}</span>
+                    </div>
+                    {plan.targetPest && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Target: </span>
+                        <span className="text-gray-900 dark:text-white">{plan.targetPest}</span>
+                      </div>
+                    )}
+                    {plan.applicationMethod && (
+                      <div>
+                        <span className="text-gray-500 dark:text-gray-400">Method: </span>
+                        <span className="text-gray-900 dark:text-white">{plan.applicationMethod}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {plan.safetyPrecautions && (
+                    <div className="mb-3 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm">
+                      <span className="text-yellow-800 dark:text-yellow-200 font-medium">⚠️ Safety: </span>
+                      <span className="text-yellow-700 dark:text-yellow-300">{plan.safetyPrecautions}</span>
+                    </div>
+                  )}
+                  
+                  {plan.notes && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{plan.notes}</p>
+                  )}
+                  
+                  <div className="flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                    {plan.status !== 'COMPLETED' && (
+                      <button
+                        onClick={() => handleMarkSprayPlanComplete(plan.id)}
+                        className="flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 rounded text-sm hover:bg-green-200 dark:hover:bg-green-800"
+                      >
+                        <CheckCircle className="w-3 h-3" />
+                        Mark Complete
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setEditingSprayPlan(plan);
+                        setShowSprayPlanModal(true);
+                      }}
+                      className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSprayPlan(plan.id)}
+                      className="px-3 py-1 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                  
+                  {plan.status === 'COMPLETED' && plan.completedDate && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Completed on {formatDateShort(plan.completedDate)}
+                      {plan.completedBy && ` by ${plan.completedBy.name}`}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Additional Info */}
       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Additional Information</h3>
@@ -582,6 +768,21 @@ export default function CropDetailPage({
           setShowActivityModal(false);
           setEditingActivity(null);
           window.location.reload();
+        }}
+      />
+
+      <SprayPlanModal 
+        isOpen={showSprayPlanModal}
+        onClose={() => {
+          setShowSprayPlanModal(false);
+          setEditingSprayPlan(null);
+        }}
+        plantingId={id}
+        editingPlan={editingSprayPlan}
+        onSuccess={() => {
+          setShowSprayPlanModal(false);
+          setEditingSprayPlan(null);
+          fetchSprayPlans();
         }}
       />
     </div>
@@ -1061,35 +1262,50 @@ function HarvestModal({ isOpen, onClose, plantingId, cropName, onSuccess }: any)
         }),
       });
 
+      if (!harvestResponse.ok) {
+        const harvestError = await harvestResponse.json();
+        console.error('Harvest creation failed:', harvestError);
+        alert(`Failed to create harvest record: ${harvestError.error || 'Unknown error'}`);
+        return;
+      }
+
       // Add harvest activity
       const activityResponse = await fetch(`/api/crops/${plantingId}/activities`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'HARVEST',
-          description: `Harvested ${formData.quantity}${formData.unit} - ${formData.quality} quality`,
+          description: `Harvested ${formData.quantity} ${formData.unit} - ${formData.quality} quality`,
           activityDate: formData.harvestDate,
           notes: formData.notes,
         }),
       });
 
-      // Update planting status
-      await fetch(`/api/crops/${plantingId}`, {
+      if (!activityResponse.ok) {
+        const activityError = await activityResponse.json();
+        console.error('Activity creation failed:', activityError);
+        // Continue anyway since harvest was recorded
+      }
+
+      // Update planting status to COMPLETED
+      const statusResponse = await fetch(`/api/crops/${plantingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: 'COMPLETED',
-          actualHarvest: formData.harvestDate,
         }),
       });
 
-      if (harvestResponse.ok && activityResponse.ok) {
-        onSuccess();
-      } else {
-        alert('Failed to record harvest');
+      if (!statusResponse.ok) {
+        const statusError = await statusResponse.json();
+        console.error('Status update failed:', statusError);
+        // Continue anyway since harvest was recorded
       }
+
+      onSuccess();
     } catch (error) {
-      alert('Failed to record harvest');
+      console.error('Error recording harvest:', error);
+      alert('Failed to record harvest. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1535,6 +1751,242 @@ function ActivityModal({ isOpen, onClose, plantingId, onSuccess, editingActivity
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {isSubmitting ? 'Saving...' : editingActivity ? 'Update Activity' : 'Add Activity'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Spray Plan Modal
+function SprayPlanModal({ isOpen, onClose, plantingId, editingPlan, onSuccess }: any) {
+  const [formData, setFormData] = useState({
+    name: '',
+    pesticide: '',
+    targetPest: '',
+    dosage: '',
+    applicationMethod: '',
+    scheduledDate: new Date().toISOString().split('T')[0],
+    weatherConditions: '',
+    safetyPrecautions: '',
+    notes: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (editingPlan) {
+      setFormData({
+        name: editingPlan.name || '',
+        pesticide: editingPlan.pesticide || '',
+        targetPest: editingPlan.targetPest || '',
+        dosage: editingPlan.dosage || '',
+        applicationMethod: editingPlan.applicationMethod || '',
+        scheduledDate: editingPlan.scheduledDate ? new Date(editingPlan.scheduledDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        weatherConditions: editingPlan.weatherConditions || '',
+        safetyPrecautions: editingPlan.safetyPrecautions || '',
+        notes: editingPlan.notes || '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        pesticide: '',
+        targetPest: '',
+        dosage: '',
+        applicationMethod: '',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        weatherConditions: '',
+        safetyPrecautions: '',
+        notes: '',
+      });
+    }
+  }, [editingPlan, isOpen]);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      const url = editingPlan 
+        ? `/api/crops/${plantingId}/spray-plans/${editingPlan.id}`
+        : `/api/crops/${plantingId}/spray-plans`;
+      
+      const response = await fetch(url, {
+        method: editingPlan ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to save spray plan:', error);
+        alert(`Failed to save spray plan: ${error.error || 'Unknown error'}`);
+        return;
+      }
+
+      onSuccess();
+    } catch (error) {
+      console.error('Error saving spray plan:', error);
+      alert('Failed to save spray plan. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          {editingPlan ? 'Edit Spray Plan' : 'Add Pest Spray Plan'}
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Create a spray schedule for workers to follow
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Plan Name *
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              placeholder="e.g., Week 2 Pest Control, Pre-flowering Spray"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Pesticide/Chemical *
+              </label>
+              <input
+                type="text"
+                value={formData.pesticide}
+                onChange={(e) => setFormData({ ...formData, pesticide: e.target.value })}
+                required
+                placeholder="e.g., Malathion, Neem Oil"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Target Pest
+              </label>
+              <input
+                type="text"
+                value={formData.targetPest}
+                onChange={(e) => setFormData({ ...formData, targetPest: e.target.value })}
+                placeholder="e.g., Aphids, Caterpillars"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Dosage *
+              </label>
+              <input
+                type="text"
+                value={formData.dosage}
+                onChange={(e) => setFormData({ ...formData, dosage: e.target.value })}
+                required
+                placeholder="e.g., 50ml per 20L water"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Application Method
+              </label>
+              <select
+                value={formData.applicationMethod}
+                onChange={(e) => setFormData({ ...formData, applicationMethod: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select method</option>
+                <option value="Foliar spray">Foliar spray</option>
+                <option value="Soil drench">Soil drench</option>
+                <option value="Seed treatment">Seed treatment</option>
+                <option value="Fumigation">Fumigation</option>
+                <option value="Dusting">Dusting</option>
+                <option value="Granular application">Granular application</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Scheduled Date *
+            </label>
+            <input
+              type="date"
+              value={formData.scheduledDate}
+              onChange={(e) => setFormData({ ...formData, scheduledDate: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Weather Conditions
+            </label>
+            <input
+              type="text"
+              value={formData.weatherConditions}
+              onChange={(e) => setFormData({ ...formData, weatherConditions: e.target.value })}
+              placeholder="e.g., Apply in early morning, avoid rain for 6 hours"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              ⚠️ Safety Precautions
+            </label>
+            <textarea
+              value={formData.safetyPrecautions}
+              onChange={(e) => setFormData({ ...formData, safetyPrecautions: e.target.value })}
+              rows={2}
+              placeholder="e.g., Wear gloves and mask, keep away from water sources"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Additional Notes
+            </label>
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              rows={2}
+              placeholder="Any other instructions for workers..."
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            />
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+            >
+              {isSubmitting ? 'Saving...' : editingPlan ? 'Update Plan' : 'Create Plan'}
             </button>
           </div>
         </form>
