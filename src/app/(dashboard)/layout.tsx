@@ -28,7 +28,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Livestock', href: '/dashboard/livestock', icon: Beef },
   { name: 'Crops', href: '/dashboard/crops', icon: Sprout },
-  { name: 'Workers', href: '/dashboard/workers', icon: Users },
+  { name: 'Workers', href: '/dashboard/workers', icon: Users, adminOnly: true },
   { name: 'Equipment', href: '/dashboard/equipment', icon: Wrench },
   { name: 'Tasks', href: '/dashboard/tasks', icon: ClipboardList },
   { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
@@ -126,7 +126,15 @@ export default function DashboardLayout({
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navigation.map((item) => {
+          {navigation
+            .filter((item) => {
+              // Hide admin-only items from STAFF users
+              if (item.adminOnly && session?.user?.role === 'STAFF') {
+                return false;
+              }
+              return true;
+            })
+            .map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link

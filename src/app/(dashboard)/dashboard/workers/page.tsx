@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { 
   Plus, 
   Search, 
@@ -14,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Calendar
+  Calendar,
+  ShieldAlert
 } from 'lucide-react';
 import { formatMonthYear } from '@/lib/utils';
 
@@ -31,11 +34,37 @@ const statusColors: Record<string, string> = {
 };
 
 export default function WorkersPage() {
+  const router = useRouter();
+  const { data: session, status: sessionStatus } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [workers, setWorkers] = useState<any[]>([]);
   const [showAttendance, setShowAttendance] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Redirect staff users - they shouldn't access this page
+  useEffect(() => {
+    if (sessionStatus === 'authenticated' && session?.user?.role === 'STAFF') {
+      router.push('/dashboard');
+    }
+  }, [session, sessionStatus, router]);
+
+  // Show access denied for staff users
+  if (sessionStatus === 'authenticated' && session?.user?.role === 'STAFF') {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">You don&apos;t have permission to view this page.</p>
+        <Link 
+          href="/dashboard"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   useEffect(() => {
     async function fetchWorkers() {
