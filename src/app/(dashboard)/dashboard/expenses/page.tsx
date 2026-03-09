@@ -66,10 +66,12 @@ export default function ExpensesPage() {
 
   useEffect(() => {
     fetchExpenses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     filterExpenses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses, searchTerm, selectedCategory]);
 
   const fetchExpenses = async () => {

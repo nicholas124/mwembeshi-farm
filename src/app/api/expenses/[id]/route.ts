@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/expenses/[id] - Get a single expense
 export async function GET(
@@ -66,6 +67,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'EXPENSE_UPDATED',
+      title: 'Expense Updated',
+      message: `Expense "${expense.description}" was updated`,
+      entityType: 'expense',
+      entityId: expense.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: expense,
@@ -88,6 +97,14 @@ export async function DELETE(
   try {
     await prisma.expense.delete({
       where: { id: params.id },
+    });
+
+    await createNotification({
+      type: 'EXPENSE_DELETED',
+      title: 'Expense Deleted',
+      message: `An expense record was deleted`,
+      entityType: 'expense',
+      entityId: params.id,
     });
 
     return NextResponse.json({

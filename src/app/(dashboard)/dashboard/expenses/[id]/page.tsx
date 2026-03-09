@@ -56,6 +56,7 @@ export default function ExpenseDetailPage() {
     if (params.id) {
       fetchExpense();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchExpense = async () => {

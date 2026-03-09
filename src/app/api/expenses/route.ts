@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/expenses - Get all expenses with filtering
 export async function GET(request: NextRequest) {
@@ -83,6 +84,14 @@ export async function POST(request: NextRequest) {
         receipt,
         notes,
       },
+    });
+
+    await createNotification({
+      type: 'EXPENSE_ADDED',
+      title: 'New Expense Recorded',
+      message: `Expense of K${parseFloat(amount).toLocaleString()} for "${description}" was added`,
+      entityType: 'expense',
+      entityId: expense.id,
     });
 
     return NextResponse.json(

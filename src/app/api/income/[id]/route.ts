@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/income/[id] - Get a single income record
 export async function GET(
@@ -64,6 +65,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'INCOME_UPDATED',
+      title: 'Income Updated',
+      message: `Income record "${income.description}" was updated`,
+      entityType: 'income',
+      entityId: income.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: income,
@@ -86,6 +95,14 @@ export async function DELETE(
   try {
     await prisma.income.delete({
       where: { id: params.id },
+    });
+
+    await createNotification({
+      type: 'INCOME_DELETED',
+      title: 'Income Deleted',
+      message: `An income record was deleted`,
+      entityType: 'income',
+      entityId: params.id,
     });
 
     return NextResponse.json({

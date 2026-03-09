@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 import { AnimalType, AnimalStatus, Gender } from '@/types';
 
 // GET /api/animals - List all animals with filters
@@ -101,6 +102,14 @@ export async function POST(request: NextRequest) {
       },
     });
     
+    await createNotification({
+      type: 'ANIMAL_ADDED',
+      title: 'New Animal Added',
+      message: `${animal.type} "${animal.name || animal.tag}" was added to the farm`,
+      entityType: 'animal',
+      entityId: animal.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: animal,

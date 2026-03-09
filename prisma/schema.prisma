@@ -36,6 +36,7 @@ model User {
   treatments      Treatment[]
   harvests        Harvest[]
   sprayPlansCompleted SprayPlan[]
+  notifications   Notification[]   @relation("NotificationsCreated")
 
   @@map("users")
 }
@@ -88,6 +89,7 @@ model Animal {
   weights       WeightRecord[]
   productions   Production[]  // milk, eggs, etc.
   breeding      BreedingRecord[]
+  goatDailyLogs GoatDailyLog[]
 
   @@index([type, status])
   @@index([tag])
@@ -253,7 +255,8 @@ model Field {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  plantings   Planting[]
+  plantings      Planting[]
+  cropDailyLogs  CropDailyLog[]
 
   @@map("fields")
 }
@@ -292,6 +295,7 @@ model Planting {
   harvests        Harvest[]
   inputs          CropInput[]
   sprayPlans      SprayPlan[]
+  cropDailyLogs   CropDailyLog[]
 
   @@index([cropTypeId, status])
   @@index([fieldId, plantingDate])
@@ -456,6 +460,8 @@ model Worker {
   attendances   Attendance[]
   payments      Payment[]
   taskAssignments TaskWorker[]
+  goatDailyLogs GoatDailyLog[]
+  cropDailyLogs CropDailyLog[]
 
   @@map("workers")
 }
@@ -603,6 +609,105 @@ enum TaskStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+// ==========================================
+// GOAT DAILY MANAGEMENT TRACKER
+// ==========================================
+
+model GoatDailyLog {
+  id            String   @id @default(cuid())
+  date          DateTime @db.Date
+  workerId      String?
+  worker        Worker?  @relation(fields: [workerId], references: [id])
+  activity      GoatActivity
+  description   String?
+  goatsAffected Int?     // Number of goats involved
+  animalId      String?  // Optional: specific goat
+  animal        Animal?  @relation(fields: [animalId], references: [id])
+  timeSpent     Decimal? @db.Decimal(4, 2) // Hours
+  status        DailyLogStatus @default(COMPLETED)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date, workerId])
+  @@index([date, activity])
+  @@map("goat_daily_logs")
+}
+
+enum GoatActivity {
+  FEEDING
+  WATERING
+  MILKING
+  CLEANING
+  HEALTH_CHECK
+  VACCINATION
+  DEWORMING
+  HOOF_TRIMMING
+  BREEDING
+  KIDDING_ASSIST
+  WEIGHING
+  MOVING_PASTURE
+  FENCE_REPAIR
+  SHELTER_MAINTENANCE
+  RECORD_KEEPING
+  MEDICATION
+  GROOMING
+  SORTING
+  OTHER
+}
+
+enum DailyLogStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+model CropDailyLog {
+  id            String   @id @default(cuid())
+  date          DateTime @db.Date
+  workerId      String?
+  worker        Worker?  @relation(fields: [workerId], references: [id])
+  activity      CropDailyActivity
+  description   String?
+  plantingId    String?
+  planting      Planting? @relation(fields: [plantingId], references: [id])
+  fieldId       String?
+  field         Field?   @relation(fields: [fieldId], references: [id])
+  areaWorked    Decimal? @db.Decimal(10, 4) // hectares
+  timeSpent     Decimal? @db.Decimal(4, 2) // Hours
+  status        DailyLogStatus @default(COMPLETED)
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([date, workerId])
+  @@index([date, activity])
+  @@map("crop_daily_logs")
+}
+
+enum CropDailyActivity {
+  LAND_PREP
+  PLANTING
+  TRANSPLANTING
+  WEEDING
+  FERTILIZING
+  SPRAYING
+  IRRIGATION
+  PRUNING
+  MULCHING
+  HARVESTING
+  DRYING
+  PEST_CONTROL
+  DISEASE_CONTROL
+  SOIL_TESTING
+  COMPOSTING
+  FENCE_REPAIR
+  FIELD_INSPECTION
+  RECORD_KEEPING
+  OTHER
 }
 
 // ==========================================
@@ -868,4 +973,56 @@ model Setting {
   updatedAt DateTime @updatedAt
 
   @@map("settings")
+}
+
+// ==========================================
+// NOTIFICATIONS
+// ==========================================
+
+model Notification {
+  id          String             @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  entityType  String?            // e.g., "animal", "crop", "expense", "task"
+  entityId    String?            // ID of the related record
+  isRead      Boolean            @default(false)
+  createdById String?
+  createdBy   User?              @relation("NotificationsCreated", fields: [createdById], references: [id])
+  createdAt   DateTime           @default(now())
+
+  @@index([isRead, createdAt])
+  @@index([createdById])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  ANIMAL_ADDED
+  ANIMAL_UPDATED
+  ANIMAL_DELETED
+  CROP_ADDED
+  CROP_UPDATED
+  CROP_DELETED
+  EXPENSE_ADDED
+  EXPENSE_UPDATED
+  EXPENSE_DELETED
+  INCOME_ADDED
+  INCOME_UPDATED
+  INCOME_DELETED
+  EQUIPMENT_ADDED
+  EQUIPMENT_UPDATED
+  EQUIPMENT_DELETED
+  TASK_ADDED
+  TASK_UPDATED
+  TASK_DELETED
+  INVENTORY_ADDED
+  INVENTORY_UPDATED
+  INVENTORY_DELETED
+  WORKER_ADDED
+  WORKER_UPDATED
+  WORKER_DELETED
+  GOAT_BREEDING
+  GOAT_DAILY_LOG
+  GOAT_INVENTORY
+  CROP_DAILY_LOG
 }

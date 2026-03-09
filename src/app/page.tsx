@@ -26,7 +26,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-4">
             <Link 
-              href="/auth/login"
+              href="/login"
               className="text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
             >
               Sign In

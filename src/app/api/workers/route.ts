@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/workers - List all workers with filters
 export async function GET(request: NextRequest) {
@@ -102,6 +103,14 @@ export async function POST(request: NextRequest) {
       },
     });
     
+    await createNotification({
+      type: 'WORKER_ADDED',
+      title: 'New Worker Added',
+      message: `Worker "${worker.firstName} ${worker.lastName}" (${worker.employeeId}) was added`,
+      entityType: 'worker',
+      entityId: worker.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: worker,

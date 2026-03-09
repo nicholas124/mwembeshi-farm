@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(
   request: NextRequest,
@@ -73,6 +74,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'WORKER_UPDATED',
+      title: 'Worker Updated',
+      message: `Worker "${worker.firstName} ${worker.lastName}" was updated`,
+      entityType: 'worker',
+      entityId: worker.id,
+    });
+
     return NextResponse.json({ success: true, data: worker });
   } catch (error) {
     console.error('Error updating worker:', error);
@@ -94,6 +103,14 @@ export async function DELETE(
     const worker = await prisma.worker.update({
       where: { id },
       data: { status: 'TERMINATED' },
+    });
+
+    await createNotification({
+      type: 'WORKER_DELETED',
+      title: 'Worker Terminated',
+      message: `Worker "${worker.firstName} ${worker.lastName}" was terminated`,
+      entityType: 'worker',
+      entityId: worker.id,
     });
 
     return NextResponse.json({ 

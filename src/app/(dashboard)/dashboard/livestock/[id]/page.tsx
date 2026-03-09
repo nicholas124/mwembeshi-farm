@@ -19,6 +19,9 @@ import {
   Plus,
   ChevronRight,
   AlertCircle,
+  MapPin,
+  Tag,
+  Clock,
 } from 'lucide-react';
 import { useEffect, useState, use } from 'react';
 import { formatDate, formatDateShort, formatMonth } from '@/lib/utils';
@@ -32,12 +35,12 @@ const animalTypeEmoji: Record<string, string> = {
   OTHER: '🐾',
 };
 
-const statusColors: Record<string, string> = {
-  ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  SOLD: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  DECEASED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-  TRANSFERRED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  SLAUGHTERED: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+const statusConfig: Record<string, { bg: string; dot: string; label: string }> = {
+  ACTIVE: { bg: 'bg-green-100 text-green-800 dark:bg-green-900/60 dark:text-green-200', dot: 'bg-green-500', label: 'Active' },
+  SOLD: { bg: 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200', dot: 'bg-blue-500', label: 'Sold' },
+  DECEASED: { bg: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200', dot: 'bg-gray-400', label: 'Deceased' },
+  TRANSFERRED: { bg: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/60 dark:text-yellow-200', dot: 'bg-yellow-500', label: 'Transferred' },
+  SLAUGHTERED: { bg: 'bg-red-100 text-red-800 dark:bg-red-900/60 dark:text-red-200', dot: 'bg-red-500', label: 'Slaughtered' },
 };
 
 const treatmentIcons: Record<string, React.ReactNode> = {
@@ -80,17 +83,47 @@ function Modal({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
         <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-        <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
+        <div className="relative bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-xl shadow-xl w-full sm:max-w-md p-6 max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-            <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
           {children}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Section Card Component
+function SectionCard({ 
+  title, 
+  icon, 
+  action, 
+  children, 
+  className = '' 
+}: { 
+  title: string; 
+  icon: React.ReactNode; 
+  action?: React.ReactNode; 
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+      <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-gray-100 dark:border-gray-700/50">
+        <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2 text-sm">
+          {icon}
+          {title}
+        </h3>
+        {action}
+      </div>
+      <div className="p-4 sm:p-5">
+        {children}
       </div>
     </div>
   );
@@ -345,8 +378,13 @@ export default function AnimalDetailPage({
 
   if (isLoading || !animal) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+          <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -356,355 +394,461 @@ export default function AnimalDetailPage({
     const now = new Date();
     const years = now.getFullYear() - birth.getFullYear();
     const months = now.getMonth() - birth.getMonth();
+    const adjustedMonths = months < 0 ? 12 + months : months;
+    const adjustedYears = months < 0 ? years - 1 : years;
     
-    if (years > 0) {
-      if (months < 0) return `${years - 1} years, ${12 + months} months`;
-      return `${years} years, ${months} months`;
+    if (adjustedYears > 0) {
+      return `${adjustedYears}y ${adjustedMonths}m`;
     }
-    return `${months} months`;
+    return `${adjustedMonths} months`;
   };
 
-  const maxWeight = Math.max(...animal.weightHistory.map((w: any) => w.weight));
+  const maxWeight = animal.weightHistory.length > 0 
+    ? Math.max(...animal.weightHistory.map((w: any) => w.weight)) 
+    : 0;
+
+  const status = statusConfig[animal.status] || statusConfig.ACTIVE;
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-5">
+      {/* Page Header - Mobile Optimized */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             href="/dashboard/livestock"
-            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Animal Details
-            </h1>
-          </div>
+          <h1 className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
+            {animal.tag}
+          </h1>
         </div>
         <div className="flex gap-2">
           <Link
             href={`/dashboard/livestock/${id}/edit`}
-            className="inline-flex items-center gap-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
           >
             <Edit className="w-4 h-4" />
-            Edit
+            <span className="hidden sm:inline">Edit</span>
           </Link>
           <button 
             onClick={handleDelete}
-            className="inline-flex items-center gap-2 border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 transition-colors"
+            className="inline-flex items-center gap-1.5 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 px-3 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm"
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            <span className="hidden sm:inline">Delete</span>
           </button>
         </div>
       </div>
 
-      {/* Animal Profile Card */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex flex-col sm:flex-row gap-6">
-          {/* Photo/Avatar */}
-          <div className="w-32 h-32 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center text-6xl shrink-0">
-            {animalTypeEmoji[animal.type]}
+      {/* Animal Profile Card - Redesigned */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        {/* Coloured header strip */}
+        <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-400" />
+        <div className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row gap-5">
+            {/* Photo/Avatar */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-900/20 rounded-2xl flex items-center justify-center text-5xl sm:text-6xl shrink-0 mx-auto sm:mx-0">
+              {animalTypeEmoji[animal.type]}
+            </div>
+            
+            {/* Info */}
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2 mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                  {animal.name || animal.tag}
+                </h2>
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
+                  {status.label}
+                </span>
+              </div>
+              {animal.name && (
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1 justify-center sm:justify-start">
+                  <Tag className="w-3.5 h-3.5" /> {animal.tag}
+                </p>
+              )}
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                {animal.breed} {animal.type.charAt(0) + animal.type.slice(1).toLowerCase()} 
+                <span className="mx-1.5 text-gray-300 dark:text-gray-600">•</span>
+                <span className={animal.gender === 'FEMALE' ? 'text-pink-600 dark:text-pink-400' : 'text-blue-600 dark:text-blue-400'}>
+                  {animal.gender === 'FEMALE' ? '♀ Female' : '♂ Male'}
+                </span>
+              </p>
+              
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { label: 'Age', value: calculateAge(animal.dateOfBirth), icon: <Clock className="w-3.5 h-3.5 text-gray-400" /> },
+                  { label: 'Weight', value: `${animal.weight || '-'} kg`, icon: <Scale className="w-3.5 h-3.5 text-gray-400" /> },
+                  { label: 'Color', value: animal.color || '-', icon: <MapPin className="w-3.5 h-3.5 text-gray-400" /> },
+                  { label: 'Acquired', value: animal.acquisitionMethod, icon: <Calendar className="w-3.5 h-3.5 text-gray-400" /> },
+                ].map((stat) => (
+                  <div key={stat.label} className="bg-gray-50 dark:bg-gray-700/40 rounded-lg p-2.5">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      {stat.icon}
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">{stat.label}</p>
+                    </div>
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
+                      {stat.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           
-          {/* Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {animal.tag}
-              </h2>
-              {animal.name && (
-                <span className="text-xl text-gray-600 dark:text-gray-400">&quot;{animal.name}&quot;</span>
-              )}
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[animal.status]}`}>
-                {animal.status}
-              </span>
+          {animal.notes && (
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Notes:</span> {animal.notes}
+              </p>
             </div>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {animal.breed} {animal.type.charAt(0) + animal.type.slice(1).toLowerCase()} • {animal.gender === 'FEMALE' ? 'Female' : 'Male'}
-            </p>
-            
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Age</p>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {calculateAge(animal.dateOfBirth)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Weight</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{animal.weight} kg</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Color</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{animal.color}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Acquired</p>
-                <p className="font-semibold text-gray-900 dark:text-white">{animal.acquisitionMethod}</p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
-        
-        {animal.notes && (
-          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium">Notes:</span> {animal.notes}
-            </p>
+      </div>
+
+      {/* Quick Actions - Mobile Prominent */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <button 
+          onClick={() => setShowWeightModal(true)}
+          className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-[0.97] group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+            <Scale className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
           </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 dark:group-hover:text-blue-300 text-left">Record Weight</span>
+        </button>
+        <button 
+          onClick={() => setShowTreatmentModal(true)}
+          className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/10 hover:border-purple-200 dark:hover:border-purple-800 transition-all active:scale-[0.97] group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+            <Syringe className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-700 dark:group-hover:text-purple-300 text-left">Treatment</span>
+        </button>
+        <button 
+          onClick={() => setShowProductionModal(true)}
+          className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-cyan-50 dark:hover:bg-cyan-900/10 hover:border-cyan-200 dark:hover:border-cyan-800 transition-all active:scale-[0.97] group"
+        >
+          <div className="w-9 h-9 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center shrink-0">
+            <Milk className="w-4.5 h-4.5 text-cyan-600 dark:text-cyan-400" />
+          </div>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-cyan-700 dark:group-hover:text-cyan-300 text-left">Production</span>
+        </button>
+        {animal.gender === 'FEMALE' ? (
+          <button 
+            onClick={() => setShowBreedingModal(true)}
+            className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-pink-50 dark:hover:bg-pink-900/10 hover:border-pink-200 dark:hover:border-pink-800 transition-all active:scale-[0.97] group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center shrink-0">
+              <Baby className="w-4.5 h-4.5 text-pink-600 dark:text-pink-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-pink-700 dark:group-hover:text-pink-300 text-left">Breeding</span>
+          </button>
+        ) : (
+          <Link 
+            href={`/dashboard/livestock/${id}/edit`}
+            className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-[0.97] group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
+              <Edit className="w-4.5 h-4.5 text-gray-600 dark:text-gray-400" />
+            </div>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 text-left">Edit Info</span>
+          </Link>
         )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-5">
         {/* Lineage */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <Baby className="w-5 h-5 text-pink-500" />
-            Lineage
-          </h3>
+        <SectionCard 
+          title="Lineage" 
+          icon={<Baby className="w-4 h-4 text-pink-500" />}
+        >
           
           <div className="space-y-3">
             {animal.mother && (
-              <div className="flex items-center justify-between p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg">
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Mother</p>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {animal.mother.tag} {animal.mother.name && `"${animal.mother.name}"`}
-                  </p>
+              <Link href={`/dashboard/livestock/${animal.mother.tag}`} className="flex items-center justify-between p-3 bg-pink-50 dark:bg-pink-900/20 rounded-lg hover:bg-pink-100 dark:hover:bg-pink-900/30 transition-colors group">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🐄</span>
+                  <div>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">Mother</p>
+                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                      {animal.mother.tag} {animal.mother.name && `"${animal.mother.name}"`}
+                    </p>
+                  </div>
                 </div>
-                <Link href={`/dashboard/livestock/${animal.mother.tag}`} className="text-sm text-green-600 hover:underline">
-                  View
-                </Link>
-              </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-pink-500 transition-colors" />
+              </Link>
             )}
             
             {animal.father && (
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                <div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase">Father</p>
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {animal.father.tag} {animal.father.name && `"${animal.father.name}"`}
-                  </p>
+              <Link href={`/dashboard/livestock/${animal.father.tag}`} className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors group">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🐂</span>
+                  <div>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium">Father</p>
+                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                      {animal.father.tag} {animal.father.name && `"${animal.father.name}"`}
+                    </p>
+                  </div>
                 </div>
-                <Link href={`/dashboard/livestock/${animal.father.tag}`} className="text-sm text-green-600 hover:underline">
-                  View
-                </Link>
-              </div>
+                <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition-colors" />
+              </Link>
             )}
             
+            {!animal.mother && !animal.father && animal.offspring.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No lineage records</p>
+            )}
+
             {animal.offspring.length > 0 && (
-              <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase mb-2">Offspring ({animal.offspring.length})</p>
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-700">
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-medium mb-2">
+                  Offspring ({animal.offspring.length})
+                </p>
                 <div className="space-y-2">
                   {animal.offspring.map((child: any) => (
-                    <div key={child.tag} className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white text-sm">
-                          {child.tag} {child.name && `"${child.name}"`}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Born: {formatDate(child.dateOfBirth)}
-                        </p>
+                    <Link 
+                      key={child.tag} 
+                      href={`/dashboard/livestock/${child.tag}`}
+                      className="flex items-center justify-between p-2.5 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-base">🐾</span>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {child.tag} {child.name && `"${child.name}"`}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Born: {formatDate(child.dateOfBirth)}
+                          </p>
+                        </div>
                       </div>
-                      <Link href={`/dashboard/livestock/${child.tag}`} className="text-xs text-green-600 hover:underline">
-                        View
-                      </Link>
-                    </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-green-500 transition-colors" />
+                    </Link>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </SectionCard>
 
         {/* Treatments */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Syringe className="w-5 h-5 text-blue-500" />
-              Recent Treatments
-            </h3>
+        <SectionCard
+          title="Recent Treatments"
+          icon={<Syringe className="w-4 h-4 text-blue-500" />}
+          action={
             <button 
               onClick={() => setShowTreatmentModal(true)}
-              className="text-sm text-green-600 hover:underline flex items-center gap-1"
+              className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
             >
-              <Plus className="w-4 h-4" /> Add
+              <Plus className="w-3.5 h-3.5" /> Add
             </button>
-          </div>
+          }
+        >
           
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {animal.treatments && animal.treatments.length > 0 ? (
               animal.treatments.map((treatment: any) => (
-                <div key={treatment.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <div className="mt-0.5">
+                <div key={treatment.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
+                  <div className="mt-0.5 w-8 h-8 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 shadow-sm">
                     {treatmentIcons[treatment.type] || <Heart className="w-4 h-4 text-gray-500" />}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium text-gray-900 dark:text-white text-sm truncate">
                         {treatment.description || treatment.type}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-[10px] text-gray-500 shrink-0 bg-gray-200 dark:bg-gray-600 px-1.5 py-0.5 rounded">
                         {formatDateShort(treatment.treatmentDate)}
                       </p>
                     </div>
                     {treatment.medication && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {treatment.medication} {treatment.dosage && `- ${treatment.dosage}`}
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                        {treatment.medication} {treatment.dosage && `• ${treatment.dosage}`}
                       </p>
-                    )}
-                    {treatment.notes && (
-                      <p className="text-xs text-gray-500 mt-1">{treatment.notes}</p>
                     )}
                     {treatment.nextDueDate && (
-                      <p className="text-xs text-blue-600 mt-1">
-                        Next due: {formatDateShort(treatment.nextDueDate)}
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Next: {formatDateShort(treatment.nextDueDate)}
                       </p>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No treatments recorded</p>
+              <div className="text-center py-6">
+                <Syringe className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No treatments recorded</p>
+                <button 
+                  onClick={() => setShowTreatmentModal(true)}
+                  className="text-xs text-green-600 dark:text-green-400 mt-1 hover:underline"
+                >
+                  Add first treatment
+                </button>
+              </div>
             )}
           </div>
-        </div>
+        </SectionCard>
       </div>
 
-      {/* Production Records (for milk/egg producing animals) */}
+      {/* Production Records */}
       {(animal.type === 'COW' || animal.type === 'GOAT' || animal.type === 'CHICKEN' || animal.type === 'SHEEP') && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              {animal.type === 'CHICKEN' ? (
-                <Egg className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <Milk className="w-5 h-5 text-blue-500" />
-              )}
-              Production Records
-            </h3>
+        <SectionCard
+          title="Production Records"
+          icon={animal.type === 'CHICKEN' 
+            ? <Egg className="w-4 h-4 text-yellow-500" /> 
+            : <Milk className="w-4 h-4 text-blue-500" />
+          }
+          action={
             <button 
               onClick={() => setShowProductionModal(true)}
-              className="text-sm text-green-600 hover:underline flex items-center gap-1"
+              className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
             >
-              <Plus className="w-4 h-4" /> Record Production
+              <Plus className="w-3.5 h-3.5" /> Record
             </button>
-          </div>
+          }
+        >
           
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {animal.productions && animal.productions.length > 0 ? (
               animal.productions.slice(0, 6).map((prod: any) => (
-                <div key={prod.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  {productionIcons[prod.type] || <Activity className="w-4 h-4 text-gray-500" />}
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                <div key={prod.id} className="flex items-center gap-2.5 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
+                  <div className="w-8 h-8 rounded-lg bg-white dark:bg-gray-700 flex items-center justify-center shrink-0 shadow-sm">
+                    {productionIcons[prod.type] || <Activity className="w-4 h-4 text-gray-500" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm">
                       {prod.quantity} {prod.unit}
                     </p>
-                    <p className="text-xs text-gray-500">{formatDateShort(prod.recordedAt)}</p>
+                    <p className="text-[10px] text-gray-500">{formatDateShort(prod.recordedAt)}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 col-span-full text-center py-4">No production records</p>
+              <div className="col-span-full text-center py-6">
+                <Milk className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No production records</p>
+                <button 
+                  onClick={() => setShowProductionModal(true)}
+                  className="text-xs text-green-600 dark:text-green-400 mt-1 hover:underline"
+                >
+                  Record first production
+                </button>
+              </div>
             )}
           </div>
           
           {animal.productions && animal.productions.length > 6 && (
             <Link 
               href={`/dashboard/livestock/${id}/production`}
-              className="mt-4 text-sm text-green-600 hover:underline flex items-center justify-center gap-1"
+              className="mt-4 text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center justify-center gap-1"
             >
-              View all production records <ChevronRight className="w-4 h-4" />
+              View all production records <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           )}
-        </div>
+        </SectionCard>
       )}
 
-      {/* Breeding Records (for female animals) */}
+      {/* Breeding Records */}
       {animal.gender === 'FEMALE' && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-              <Baby className="w-5 h-5 text-pink-500" />
-              Breeding Records
-            </h3>
+        <SectionCard
+          title="Breeding Records"
+          icon={<Baby className="w-4 h-4 text-pink-500" />}
+          action={
             <button 
               onClick={() => setShowBreedingModal(true)}
-              className="text-sm text-green-600 hover:underline flex items-center gap-1"
+              className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
             >
-              <Plus className="w-4 h-4" /> Add Breeding Record
+              <Plus className="w-3.5 h-3.5" /> Add
             </button>
-          </div>
+          }
+        >
           
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {animal.breeding && animal.breeding.length > 0 ? (
               animal.breeding.map((record: any) => (
-                <div key={record.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <Baby className="w-4 h-4 text-pink-500 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">
-                        Breeding Date: {formatDateShort(record.breedingDate)}
-                      </p>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${breedingStatusColors[record.status]}`}>
+                <div key={record.id} className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
+                  <div className="w-8 h-8 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center shrink-0">
+                    <Baby className="w-4 h-4 text-pink-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm">
+                          {formatDateShort(record.breedingDate)}
+                        </p>
+                        {record.expectedDue && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                            Due: {formatDateShort(record.expectedDue)}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium ${breedingStatusColors[record.status]}`}>
                         {record.status}
                       </span>
                     </div>
-                    {record.expectedDue && (
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                        Expected: {formatDateShort(record.expectedDue)}
-                      </p>
-                    )}
                     {record.actualBirthDate && (
-                      <p className="text-xs text-green-600">
-                        Birth: {formatDateShort(record.actualBirthDate)} - {record.offspring} offspring
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        Birth: {formatDateShort(record.actualBirthDate)} — {record.offspring} offspring
                       </p>
                     )}
                     {record.notes && (
-                      <p className="text-xs text-gray-500 mt-1">{record.notes}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{record.notes}</p>
                     )}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">No breeding records</p>
+              <div className="text-center py-6">
+                <Baby className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+                <p className="text-sm text-gray-500 dark:text-gray-400">No breeding records</p>
+                <button 
+                  onClick={() => setShowBreedingModal(true)}
+                  className="text-xs text-green-600 dark:text-green-400 mt-1 hover:underline"
+                >
+                  Add first breeding record
+                </button>
+              </div>
             )}
           </div>
-        </div>
+        </SectionCard>
       )}
 
       {/* Weight History Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-green-500" />
-            Weight History
-          </h3>
+      <SectionCard
+        title="Weight History"
+        icon={<TrendingUp className="w-4 h-4 text-green-500" />}
+        action={
           <button 
             onClick={() => setShowWeightModal(true)}
-            className="text-sm text-green-600 hover:underline flex items-center gap-1"
+            className="text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center gap-1 px-2 py-1 rounded-md hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
           >
-            <Plus className="w-4 h-4" /> Record Weight
+            <Plus className="w-3.5 h-3.5" /> Record
           </button>
-        </div>
+        }
+      >
         
         {animal.weightHistory && animal.weightHistory.length > 0 ? (
-          <div className="h-48 flex items-end justify-between gap-2">
+          <div className="h-48 flex items-end justify-between gap-1.5 sm:gap-2">
             {animal.weightHistory.map((record: any, index: number) => (
-              <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                <div className="w-full flex justify-center" style={{ height: '160px' }}>
+              <div key={index} className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
+                <div className="w-full flex justify-center" style={{ height: '140px' }}>
                   <div 
-                    className="w-8 bg-green-500 rounded-t hover:bg-green-600 transition-colors cursor-pointer"
-                    style={{ height: `${(record.weight / maxWeight) * 100}%` }}
-                    title={`${record.weight} kg on ${formatDateShort(record.date)}`}
-                  />
+                    className="w-full max-w-[40px] bg-gradient-to-t from-green-600 to-green-400 rounded-t-md hover:from-green-700 hover:to-green-500 transition-colors cursor-pointer relative group"
+                    style={{ height: `${maxWeight > 0 ? (record.weight / maxWeight) * 100 : 0}%`, minHeight: '4px' }}
+                  >
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      {record.weight}kg
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center">
-                  <p className="text-xs font-medium text-gray-900 dark:text-white">{record.weight}kg</p>
-                  <p className="text-xs text-gray-500">
+                <div className="text-center w-full">
+                  <p className="text-xs font-semibold text-gray-900 dark:text-white">{record.weight}<span className="text-[10px] font-normal text-gray-500">kg</span></p>
+                  <p className="text-[10px] text-gray-500 truncate">
                     {formatMonth(record.date)}
                   </p>
                 </div>
@@ -712,46 +856,18 @@ export default function AnimalDetailPage({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 text-center py-8">No weight records. Click "Record Weight" to add the first entry.</p>
-        )}
-      </div>
-
-      {/* Quick Actions */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <button 
-            onClick={() => setShowWeightModal(true)}
-            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
-          >
-            <Scale className="w-5 h-5 mx-auto mb-1 text-blue-500" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Record Weight</span>
-          </button>
-          <button 
-            onClick={() => setShowTreatmentModal(true)}
-            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
-          >
-            <Syringe className="w-5 h-5 mx-auto mb-1 text-purple-500" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Add Treatment</span>
-          </button>
-          <button 
-            onClick={() => setShowProductionModal(true)}
-            className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
-          >
-            <Milk className="w-5 h-5 mx-auto mb-1 text-cyan-500" />
-            <span className="text-sm text-gray-700 dark:text-gray-300">Record Production</span>
-          </button>
-          {animal.gender === 'FEMALE' && (
+          <div className="text-center py-8">
+            <Scale className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-500 dark:text-gray-400">No weight records yet</p>
             <button 
-              onClick={() => setShowBreedingModal(true)}
-              className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
+              onClick={() => setShowWeightModal(true)}
+              className="text-xs text-green-600 dark:text-green-400 mt-1 hover:underline"
             >
-              <Baby className="w-5 h-5 mx-auto mb-1 text-pink-500" />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Add Breeding</span>
+              Record first weight
             </button>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </SectionCard>
 
       {/* Weight Modal */}
       <Modal isOpen={showWeightModal} onClose={() => setShowWeightModal(false)} title="Record Weight">

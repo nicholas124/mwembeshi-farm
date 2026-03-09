@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET() {
   try {
@@ -41,6 +42,14 @@ export async function POST(request: Request) {
         expiryDate: body.expiryDate ? new Date(body.expiryDate) : null,
         notes: body.notes,
       },
+    });
+
+    await createNotification({
+      type: 'INVENTORY_ADDED',
+      title: 'New Inventory Item',
+      message: `Inventory item "${item.name}" (${item.currentStock} ${item.unit}) was added`,
+      entityType: 'inventory',
+      entityId: item.id,
     });
 
     return NextResponse.json(item, { status: 201 });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/income - Get all income records with filtering
 export async function GET(request: NextRequest) {
@@ -81,6 +82,14 @@ export async function POST(request: NextRequest) {
         incomeDate: incomeDate ? new Date(incomeDate) : new Date(),
         notes,
       },
+    });
+
+    await createNotification({
+      type: 'INCOME_ADDED',
+      title: 'New Income Recorded',
+      message: `Income of K${parseFloat(amount).toLocaleString()} from "${description}" was added`,
+      entityType: 'income',
+      entityId: income.id,
     });
 
     return NextResponse.json(

@@ -57,10 +57,12 @@ export default function IncomePage() {
 
   useEffect(() => {
     fetchIncome();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     filterIncome();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [income, searchTerm, selectedCategory]);
 
   const fetchIncome = async () => {

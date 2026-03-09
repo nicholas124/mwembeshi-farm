@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/animals/[id] - Get single animal with full details
 export async function GET(
@@ -84,6 +85,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'ANIMAL_UPDATED',
+      title: 'Animal Updated',
+      message: `Animal "${animal.name || animal.tag}" was updated`,
+      entityType: 'animal',
+      entityId: animal.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: animal,
@@ -109,6 +118,14 @@ export async function DELETE(
     await prisma.animal.update({
       where: { id },
       data: { status: 'DECEASED' },
+    });
+
+    await createNotification({
+      type: 'ANIMAL_DELETED',
+      title: 'Animal Archived',
+      message: `Animal record was archived`,
+      entityType: 'animal',
+      entityId: id,
     });
 
     return NextResponse.json({

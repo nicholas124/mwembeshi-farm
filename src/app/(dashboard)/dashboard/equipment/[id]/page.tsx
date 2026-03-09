@@ -82,6 +82,7 @@ export default function EquipmentDetailPage({
       .then(res => res.json())
       .then(data => setUsers(data.data || []))
       .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleDelete = async () => {

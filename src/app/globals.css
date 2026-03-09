@@ -81,12 +81,24 @@
 @media (hover: none) and (pointer: coarse) {
   button,
   [role="button"],
-  input,
   select,
   textarea {
     min-height: 44px;
-    min-width: 44px;
   }
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area for bottom nav on notched phones */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* Print styles */

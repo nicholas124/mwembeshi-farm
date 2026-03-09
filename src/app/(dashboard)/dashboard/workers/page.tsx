@@ -42,31 +42,17 @@ export default function WorkersPage() {
   const [showAttendance, setShowAttendance] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const isStaffUser = sessionStatus === 'authenticated' && session?.user?.role === 'STAFF';
+
   // Redirect staff users - they shouldn't access this page
   useEffect(() => {
-    if (sessionStatus === 'authenticated' && session?.user?.role === 'STAFF') {
+    if (isStaffUser) {
       router.push('/dashboard');
     }
-  }, [session, sessionStatus, router]);
-
-  // Show access denied for staff users
-  if (sessionStatus === 'authenticated' && session?.user?.role === 'STAFF') {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-4">You don&apos;t have permission to view this page.</p>
-        <Link 
-          href="/dashboard"
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-        >
-          Go to Dashboard
-        </Link>
-      </div>
-    );
-  }
+  }, [isStaffUser, router]);
 
   useEffect(() => {
+    if (isStaffUser) return;
     async function fetchWorkers() {
       try {
         const response = await fetch('/api/workers');
@@ -88,7 +74,24 @@ export default function WorkersPage() {
       }
     }
     fetchWorkers();
-  }, []);
+  }, [isStaffUser]);
+
+  // Show access denied for staff users
+  if (isStaffUser) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16">
+        <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
+        <p className="text-gray-600 dark:text-gray-400 mb-4">You don&apos;t have permission to view this page.</p>
+        <Link 
+          href="/dashboard"
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+        >
+          Go to Dashboard
+        </Link>
+      </div>
+    );
+  }
 
   const filteredWorkers = workers.filter((worker) => {
     const matchesSearch = 

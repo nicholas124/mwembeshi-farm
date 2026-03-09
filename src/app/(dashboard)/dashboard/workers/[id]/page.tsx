@@ -73,6 +73,7 @@ export default function WorkerDetailPage({
 
   useEffect(() => {
     fetchWorker();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleDelete = async () => {

@@ -50,6 +50,7 @@ export default function IncomeDetailPage() {
     if (params.id) {
       fetchIncome();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchIncome = async () => {

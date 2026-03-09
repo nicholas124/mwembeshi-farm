@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/tasks - List all tasks with filters
 export async function GET(request: NextRequest) {
@@ -117,6 +118,14 @@ export async function POST(request: NextRequest) {
       });
     }
     
+    await createNotification({
+      type: 'TASK_ADDED',
+      title: 'New Task Created',
+      message: `Task "${task.title}" was created${task.assignedTo ? ` and assigned to ${task.assignedTo.name}` : ''}`,
+      entityType: 'task',
+      entityId: task.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: task,

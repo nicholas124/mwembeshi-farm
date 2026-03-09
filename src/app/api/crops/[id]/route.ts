@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/crops/[id] - Get a single planting
 export async function GET(
@@ -78,6 +79,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'CROP_UPDATED',
+      title: 'Crop Planting Updated',
+      message: `Planting of ${planting.cropType?.name || 'crop'} in ${planting.field?.name || 'field'} was updated`,
+      entityType: 'crop',
+      entityId: planting.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: planting,
@@ -106,6 +115,14 @@ export async function DELETE(
       prisma.harvest.deleteMany({ where: { plantingId: id } }),
       prisma.planting.delete({ where: { id } }),
     ]);
+
+    await createNotification({
+      type: 'CROP_DELETED',
+      title: 'Crop Planting Deleted',
+      message: `A crop planting record was deleted`,
+      entityType: 'crop',
+      entityId: id,
+    });
 
     return NextResponse.json({
       success: true,

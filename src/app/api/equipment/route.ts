@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 // GET /api/equipment - List all equipment with filters
 export async function GET(request: NextRequest) {
@@ -92,6 +93,14 @@ export async function POST(request: NextRequest) {
       },
     });
     
+    await createNotification({
+      type: 'EQUIPMENT_ADDED',
+      title: 'New Equipment Added',
+      message: `Equipment "${equipment.name}" was added to inventory`,
+      entityType: 'equipment',
+      entityId: equipment.id,
+    });
+
     return NextResponse.json({
       success: true,
       data: equipment,

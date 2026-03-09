@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(
   request: NextRequest,
@@ -62,6 +63,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'INVENTORY_UPDATED',
+      title: 'Inventory Updated',
+      message: `Inventory item "${item.name}" was updated`,
+      entityType: 'inventory',
+      entityId: item.id,
+    });
+
     return NextResponse.json({ success: true, data: item });
   } catch (error) {
     console.error('Error updating inventory item:', error);
@@ -83,6 +92,14 @@ export async function DELETE(
     const item = await prisma.inventoryItem.update({
       where: { id },
       data: { isActive: false },
+    });
+
+    await createNotification({
+      type: 'INVENTORY_DELETED',
+      title: 'Inventory Deactivated',
+      message: `Inventory item "${item.name}" was deactivated`,
+      entityType: 'inventory',
+      entityId: item.id,
     });
 
     return NextResponse.json({ 

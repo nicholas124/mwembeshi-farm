@@ -51,6 +51,7 @@ export default function EditExpensePage() {
     if (params.id) {
       fetchExpense();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id]);
 
   const fetchExpense = async () => {

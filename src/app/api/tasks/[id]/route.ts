@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(
   request: NextRequest,
@@ -76,6 +77,14 @@ export async function PUT(
       },
     });
 
+    await createNotification({
+      type: 'TASK_UPDATED',
+      title: 'Task Updated',
+      message: `Task "${task.title}" was updated (status: ${task.status})`,
+      entityType: 'task',
+      entityId: task.id,
+    });
+
     return NextResponse.json({ success: true, data: task });
   } catch (error) {
     console.error('Error updating task:', error);
@@ -97,6 +106,14 @@ export async function DELETE(
     const task = await prisma.task.update({
       where: { id },
       data: { status: 'CANCELLED' },
+    });
+
+    await createNotification({
+      type: 'TASK_DELETED',
+      title: 'Task Cancelled',
+      message: `Task "${task.title}" was cancelled`,
+      entityType: 'task',
+      entityId: task.id,
     });
 
     return NextResponse.json({ 

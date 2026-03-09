@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth";
+import { authOptions, hashPassword } from "@/lib/auth";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -13,6 +14,15 @@ const registerSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Only authenticated admins can register new users
+    const session = await getServerSession(authOptions);
+    if (!session || session.user?.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Only administrators can create new accounts" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
