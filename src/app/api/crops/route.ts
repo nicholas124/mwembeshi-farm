@@ -109,6 +109,17 @@ export async function POST(request: NextRequest) {
         status: body.status || 'PLANNED',
         season: body.season || null,
         notes: body.notes || null,
+        // Practical crop management fields
+        variety: body.variety || null,
+        seedSource: body.seedSource || null,
+        seedTreatment: body.seedTreatment || null,
+        plantingMethod: body.plantingMethod || 'DIRECT_SEEDING',
+        spacingRows: body.spacingRows || null,
+        spacingPlants: body.spacingPlants || null,
+        health: body.health || 'GOOD',
+        basalFertilizer: body.basalFertilizer || null,
+        topDressFertilizer: body.topDressFertilizer || null,
+        expectedYield: body.expectedYield || null,
       },
       include: {
         cropType: true,

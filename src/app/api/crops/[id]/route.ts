@@ -55,20 +55,44 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    // Build update data object, only including fields that are provided
-    const updateData: any = {};
+    // Verify planting exists
+    const existing = await prisma.planting.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json(
+        { success: false, error: 'Planting not found' },
+        { status: 404 }
+      );
+    }
+
+    // Build update data - only include provided fields
+    const updateData: Record<string, unknown> = {};
     
-    if (body.cropTypeId) updateData.cropTypeId = body.cropTypeId;
-    if (body.fieldId) updateData.fieldId = body.fieldId;
-    if (body.plantingDate) updateData.plantingDate = new Date(body.plantingDate);
-    if (body.expectedHarvest) updateData.expectedHarvest = new Date(body.expectedHarvest);
+    // Core planting fields
+    if (body.cropTypeId !== undefined) updateData.cropTypeId = body.cropTypeId;
+    if (body.fieldId !== undefined) updateData.fieldId = body.fieldId;
+    if (body.plantingDate !== undefined) updateData.plantingDate = new Date(body.plantingDate);
+    if (body.expectedHarvest !== undefined) updateData.expectedHarvest = body.expectedHarvest ? new Date(body.expectedHarvest) : null;
     if (body.areaPlanted !== undefined) updateData.areaPlanted = body.areaPlanted;
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.season !== undefined) updateData.season = body.season;
+    if (body.notes !== undefined) updateData.notes = body.notes || null;
+    
+    // Seed info
     if (body.seedQuantity !== undefined) updateData.seedQuantity = body.seedQuantity;
-    if (body.seedUnit !== undefined) updateData.seedUnit = body.seedUnit;
+    if (body.seedUnit !== undefined) updateData.seedUnit = body.seedUnit || null;
     if (body.seedCost !== undefined) updateData.seedCost = body.seedCost;
-    if (body.status) updateData.status = body.status;
-    if (body.season) updateData.season = body.season;
-    if (body.notes !== undefined) updateData.notes = body.notes;
+    if (body.seedSource !== undefined) updateData.seedSource = body.seedSource || null;
+    if (body.seedTreatment !== undefined) updateData.seedTreatment = body.seedTreatment || null;
+    
+    // Practical crop management fields
+    if (body.variety !== undefined) updateData.variety = body.variety || null;
+    if (body.plantingMethod !== undefined) updateData.plantingMethod = body.plantingMethod;
+    if (body.spacingRows !== undefined) updateData.spacingRows = body.spacingRows;
+    if (body.spacingPlants !== undefined) updateData.spacingPlants = body.spacingPlants;
+    if (body.health !== undefined) updateData.health = body.health;
+    if (body.basalFertilizer !== undefined) updateData.basalFertilizer = body.basalFertilizer || null;
+    if (body.topDressFertilizer !== undefined) updateData.topDressFertilizer = body.topDressFertilizer || null;
+    if (body.expectedYield !== undefined) updateData.expectedYield = body.expectedYield;
 
     const planting = await prisma.planting.update({
       where: { id },
@@ -82,7 +106,7 @@ export async function PUT(
     await createNotification({
       type: 'CROP_UPDATED',
       title: 'Crop Planting Updated',
-      message: `Planting of ${planting.cropType?.name || 'crop'} in ${planting.field?.name || 'field'} was updated`,
+      message: `${planting.cropType?.name || 'Crop'}${planting.variety ? ` (${planting.variety})` : ''} in ${planting.field?.name || 'field'} was updated`,
       entityType: 'crop',
       entityId: planting.id,
     });

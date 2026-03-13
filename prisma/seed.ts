@@ -22,27 +22,53 @@ async function main() {
   });
   console.log('✅ Created admin user:', admin.email);
 
-  // Create crop types
+  // Create crop types - common Zambian crops with accurate growing days
   const cropTypes = [
-    { name: 'Tomatoes', localName: 'Matimati', category: 'VEGETABLE', growingDays: 90 },
-    { name: 'Onions', localName: 'Anyezi', category: 'VEGETABLE', growingDays: 120 },
-    { name: 'Maize', localName: 'Chimanga', category: 'GRAIN', growingDays: 120 },
-    { name: 'Rape', localName: 'Rape', category: 'VEGETABLE', growingDays: 45 },
-    { name: 'Cabbage', localName: 'Kabichi', category: 'VEGETABLE', growingDays: 90 },
-    { name: 'Green Beans', localName: 'Beans', category: 'LEGUME', growingDays: 60 },
-    { name: 'Sweet Potato', localName: 'Mbambala', category: 'TUBER', growingDays: 120 },
-    { name: 'Groundnuts', localName: 'Nshawa', category: 'LEGUME', growingDays: 120 },
+    // Vegetables
+    { name: 'Tomatoes', localName: 'Matimati', category: 'VEGETABLE', growingDays: 90, description: 'Popular market crop. Varieties: Money Maker, Roma, Tengeru' },
+    { name: 'Onions', localName: 'Anyezi', category: 'VEGETABLE', growingDays: 150, description: 'Dry season crop. Varieties: Red Creole, Texas Grano' },
+    { name: 'Rape', localName: 'Rape', category: 'VEGETABLE', growingDays: 42, description: 'Fast-growing leafy vegetable, high demand year-round' },
+    { name: 'Cabbage', localName: 'Kabichi', category: 'VEGETABLE', growingDays: 90, description: 'Cool season preferred. Varieties: Copenhagen, Star 3301' },
+    { name: 'Okra', localName: 'Therere', category: 'VEGETABLE', growingDays: 55, description: 'Heat-loving, does well in Zambian climate. Varieties: Clemson Spineless' },
+    { name: 'Chinese Cabbage', localName: 'Chainizi', category: 'VEGETABLE', growingDays: 50, description: 'Fast-growing, very popular in Zambian markets' },
+    { name: 'Green Pepper', localName: 'Pilipili ya green', category: 'VEGETABLE', growingDays: 80, description: 'Transplanted crop. Varieties: California Wonder' },
+    { name: 'Eggplant', localName: 'Impwa', category: 'VEGETABLE', growingDays: 80, description: 'African eggplant varieties popular locally' },
+    { name: 'Pumpkin', localName: 'Libushi', category: 'VEGETABLE', growingDays: 100, description: 'Leaves and fruit both consumed. Dual purpose crop' },
+    { name: 'Butternut', localName: 'Butternut', category: 'VEGETABLE', growingDays: 90, description: 'Growing in popularity, good market price' },
+    // Grains
+    { name: 'Maize', localName: 'Chimanga', category: 'GRAIN', growingDays: 130, description: 'Staple crop. Varieties: SC513, SC403, MRI 634' },
+    { name: 'Sorghum', localName: 'Amabele', category: 'GRAIN', growingDays: 120, description: 'Drought tolerant, good for dry areas' },
+    { name: 'Wheat', localName: 'Wheat', category: 'GRAIN', growingDays: 120, description: 'Cool/dry season irrigated crop' },
+    { name: 'Rice', localName: 'Mpunga', category: 'GRAIN', growingDays: 150, description: 'Grown in wetland areas. Varieties: SUPA, Nerica' },
+    // Legumes
+    { name: 'Green Beans', localName: 'Beans', category: 'LEGUME', growingDays: 60, description: 'Short season crop, good for intercropping' },
+    { name: 'Groundnuts', localName: 'Nshawa', category: 'LEGUME', growingDays: 120, description: 'Varieties: Chalimbana, MGV4, Natal Common' },
+    { name: 'Soybeans', localName: 'Soya', category: 'LEGUME', growingDays: 120, description: 'Commercial crop, good for rotation with maize' },
+    { name: 'Cowpeas', localName: 'Nyemba', category: 'LEGUME', growingDays: 75, description: 'Drought tolerant, nitrogen-fixing' },
+    // Tubers
+    { name: 'Sweet Potato', localName: 'Mbambala', category: 'TUBER', growingDays: 120, description: 'Orange-fleshed varieties rich in Vitamin A' },
+    { name: 'Cassava', localName: 'Katapa', category: 'TUBER', growingDays: 365, description: 'Long season crop, drought tolerant. Major staple in Northern Zambia' },
+    { name: 'Irish Potato', localName: 'Katata', category: 'TUBER', growingDays: 100, description: 'Cool season crop. Grown commercially in Southern/Central' },
+    // Other
+    { name: 'Sunflower', localName: 'Sunflower', category: 'OTHER', growingDays: 100, description: 'Oilseed crop, grown for cooking oil production' },
+    { name: 'Cotton', localName: 'Tamba', category: 'OTHER', growingDays: 150, description: 'Cash crop grown in Eastern, Central, and Southern provinces' },
+    { name: 'Sugarcane', localName: 'Mishale', category: 'OTHER', growingDays: 365, description: 'Perennial crop, commercial production in Mazabuka area' },
   ];
 
   for (const crop of cropTypes) {
     await prisma.cropType.upsert({
       where: { name: crop.name },
-      update: {},
+      update: {
+        localName: crop.localName,
+        growingDays: crop.growingDays,
+        description: crop.description,
+      },
       create: {
         name: crop.name,
         localName: crop.localName,
         category: crop.category as any,
         growingDays: crop.growingDays,
+        description: crop.description,
       },
     });
   }

@@ -283,9 +283,21 @@ model Planting {
   seedUnit        String?       // kg, packets, etc.
   seedCost        Decimal?      @db.Decimal(10, 2)
   
+  // Practical Zambian farming fields
+  variety         String?       // Cultivar e.g. SC513, Roma, Chalimbana
+  seedSource      String?       // e.g. Zamseed, SeedCo, MRI Sinda, local market
+  seedTreatment   String?       // e.g. Apron Star, Cruiser
+  plantingMethod  PlantingMethod @default(DIRECT_SEEDING)
+  spacingRows     Decimal?      @db.Decimal(6, 1) // row spacing in cm
+  spacingPlants   Decimal?      @db.Decimal(6, 1) // plant spacing in cm
+  health          CropHealth    @default(GOOD)
+  basalFertilizer String?       // e.g. D-Compound, Compound X
+  topDressFertilizer String?    // e.g. Urea, CAN
+  expectedYield   Decimal?      @db.Decimal(10, 2) // expected yield in kg
+  
   status          PlantingStatus @default(PLANNED)
   notes           String?
-  season          String?       // e.g., "2024/2025 Rainy"
+  season          String?       // e.g., "2025/2026 Rainy"
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -300,6 +312,21 @@ model Planting {
   @@index([cropTypeId, status])
   @@index([fieldId, plantingDate])
   @@map("plantings")
+}
+
+enum PlantingMethod {
+  DIRECT_SEEDING
+  TRANSPLANTING
+  BROADCASTING
+  DIBBLING
+}
+
+enum CropHealth {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  CRITICAL
 }
 
 enum PlantingStatus {

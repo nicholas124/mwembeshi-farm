@@ -7,26 +7,39 @@ import {
   ArrowLeft,
   Save,
   Calendar,
-  MapPin,
-  Droplets
+  Droplets,
+  Sprout,
+  Ruler,
+  FlaskConical,
+  Target
 } from 'lucide-react';
-
-const cropTypes = [
-  { value: 'MAIZE', label: 'Maize', emoji: '🌽' },
-  { value: 'VEGETABLES', label: 'Vegetables', emoji: '🥬' },
-  { value: 'GROUNDNUTS', label: 'Groundnuts', emoji: '🥜' },
-  { value: 'SOYBEANS', label: 'Soybeans', emoji: '🫘' },
-  { value: 'COTTON', label: 'Cotton', emoji: '🌿' },
-  { value: 'WHEAT', label: 'Wheat', emoji: '🌾' },
-  { value: 'SUNFLOWER', label: 'Sunflower', emoji: '🌻' },
-  { value: 'OTHER', label: 'Other', emoji: '🌱' },
-];
 
 const seasons = [
   { value: 'RAINY', label: 'Rainy Season (Nov-Apr)' },
-  { value: 'DRY', label: 'Dry Season (May-Oct)' },
+  { value: 'DRY', label: 'Dry/Cool Season (May-Aug)' },
+  { value: 'HOT_DRY', label: 'Hot Dry Season (Sep-Nov)' },
   { value: 'IRRIGATED', label: 'Irrigated (Year-round)' },
 ];
+
+const plantingMethods = [
+  { value: 'DIRECT_SEEDING', label: 'Direct Seeding' },
+  { value: 'TRANSPLANTING', label: 'Transplanting' },
+  { value: 'BROADCASTING', label: 'Broadcasting' },
+  { value: 'DIBBLING', label: 'Dibbling' },
+];
+
+const irrigationTypes = [
+  { value: 'RAIN_FED', label: 'Rain-fed' },
+  { value: 'DRIP', label: 'Drip Irrigation' },
+  { value: 'SPRINKLER', label: 'Sprinkler' },
+  { value: 'FLOOD', label: 'Flood/Furrow' },
+  { value: 'CENTER_PIVOT', label: 'Center Pivot' },
+  { value: 'MANUAL', label: 'Manual (Watering Can/Bucket)' },
+];
+
+const seedSources = ['Zamseed', 'SeedCo', 'MRI Sinda', 'Pannar', 'Klein Karoo', 'Local Market', 'Saved Seed', 'Other'];
+const basalFertilizers = ['D-Compound', 'Compound X', 'Compound C', 'DAP', 'TSP', 'Manure/Compost', 'None'];
+const topDressFertilizers = ['Urea', 'CAN', 'Ammonium Nitrate', 'Foliar Feed', 'None'];
 
 export default function NewCropPage() {
   const router = useRouter();
@@ -34,7 +47,6 @@ export default function NewCropPage() {
   const [cropTypesList, setCropTypesList] = useState<any[]>([]);
   const [fieldsList, setFieldsList] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    name: '',
     cropTypeId: '',
     fieldId: '',
     variety: '',
@@ -44,9 +56,16 @@ export default function NewCropPage() {
     expectedHarvest: '',
     seedSource: '',
     seedQuantity: '',
+    seedUnit: 'kg',
+    seedCost: '',
+    seedTreatment: '',
+    plantingMethod: 'DIRECT_SEEDING',
+    spacingRows: '',
+    spacingPlants: '',
     irrigationType: 'RAIN_FED',
-    soilType: '',
-    fertilizer: '',
+    basalFertilizer: '',
+    topDressFertilizer: '',
+    expectedYield: '',
     notes: '',
   });
 
@@ -102,9 +121,18 @@ export default function NewCropPage() {
           cropTypeId: formData.cropTypeId,
           fieldId: formData.fieldId,
           areaPlanted: parseFloat(formData.fieldSize),
+          variety: formData.variety || null,
           seedQuantity: formData.seedQuantity ? parseFloat(formData.seedQuantity) : null,
-          seedUnit: 'kg',
-          seedCost: null,
+          seedUnit: formData.seedUnit || 'kg',
+          seedCost: formData.seedCost ? parseFloat(formData.seedCost) : null,
+          seedSource: formData.seedSource || null,
+          seedTreatment: formData.seedTreatment || null,
+          plantingMethod: formData.plantingMethod,
+          spacingRows: formData.spacingRows ? parseFloat(formData.spacingRows) : null,
+          spacingPlants: formData.spacingPlants ? parseFloat(formData.spacingPlants) : null,
+          basalFertilizer: formData.basalFertilizer || null,
+          topDressFertilizer: formData.topDressFertilizer || null,
+          expectedYield: formData.expectedYield ? parseFloat(formData.expectedYield) : null,
           plantingDate: formData.plantingDate,
           expectedHarvest: formData.expectedHarvest || null,
           season: formData.season,
@@ -162,7 +190,7 @@ export default function NewCropPage() {
             <option value="">Select a crop type</option>
             {cropTypesList.map((type) => (
               <option key={type.id} value={type.id}>
-                {type.name} {type.variety ? `(${type.variety})` : ''}
+                {type.name} {type.localName ? `(${type.localName})` : ''}
               </option>
             ))}
           </select>
@@ -173,9 +201,12 @@ export default function NewCropPage() {
           )}
         </div>
 
-        {/* Basic Information */}
+        {/* Planting Details */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4">Planting Details</h2>
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Sprout className="w-5 h-5 text-green-600" />
+            Planting Details
+          </h2>
           <div className="grid gap-4">
             {/* Field Selection */}
             <div>
@@ -192,7 +223,7 @@ export default function NewCropPage() {
                 <option value="">Select a field</option>
                 {fieldsList.map((field) => (
                   <option key={field.id} value={field.id}>
-                    {field.name} - {field.size} hectares {field.location ? `(${field.location})` : ''}
+                    {field.name} - {field.size} ha {field.location ? `(${field.location})` : ''}
                   </option>
                 ))}
               </select>
@@ -203,7 +234,6 @@ export default function NewCropPage() {
               )}
             </div>
 
-            {/* Field Size & Location */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -215,7 +245,7 @@ export default function NewCropPage() {
                   value={formData.fieldSize}
                   onChange={handleChange}
                   placeholder="e.g., 2.5"
-                  step="0.1"
+                  step="0.01"
                   min="0.01"
                   required
                   className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -223,34 +253,84 @@ export default function NewCropPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Variety (optional)
+                  Variety/Cultivar
                 </label>
                 <input
                   type="text"
                   name="variety"
                   value={formData.variety}
                   onChange={handleChange}
-                  placeholder="e.g., SC513, Roma"
+                  placeholder="e.g., SC513, Roma, Chalimbana"
                   className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
             </div>
 
-            {/* Season */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Growing Season
-              </label>
-              <select
-                name="season"
-                value={formData.season}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                {seasons.map((season) => (
-                  <option key={season.value} value={season.value}>{season.label}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Planting Method
+                </label>
+                <select
+                  name="plantingMethod"
+                  value={formData.plantingMethod}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {plantingMethods.map((m) => (
+                    <option key={m.value} value={m.value}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Growing Season
+                </label>
+                <select
+                  name="season"
+                  value={formData.season}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {seasons.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Spacing */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                  <Ruler className="w-3 h-3" /> Row Spacing (cm)
+                </label>
+                <input
+                  type="number"
+                  name="spacingRows"
+                  value={formData.spacingRows}
+                  onChange={handleChange}
+                  placeholder="e.g., 75"
+                  step="1"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-1">
+                  <Ruler className="w-3 h-3" /> Plant Spacing (cm)
+                </label>
+                <input
+                  type="number"
+                  name="spacingPlants"
+                  value={formData.spacingPlants}
+                  onChange={handleChange}
+                  placeholder="e.g., 25"
+                  step="1"
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -300,18 +380,36 @@ export default function NewCropPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Seed Source
                 </label>
-                <input
-                  type="text"
+                <select
                   name="seedSource"
                   value={formData.seedSource}
                   onChange={handleChange}
-                  placeholder="e.g., Zamseed, Local market"
                   className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-                />
+                >
+                  <option value="">Select source</option>
+                  {seedSources.map((src) => (
+                    <option key={src} value={src}>{src}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Seed Quantity (kg)
+                  Seed Treatment
+                </label>
+                <input
+                  type="text"
+                  name="seedTreatment"
+                  value={formData.seedTreatment}
+                  onChange={handleChange}
+                  placeholder="e.g., Apron Star, Cruiser"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Seed Quantity
                 </label>
                 <input
                   type="number"
@@ -320,6 +418,37 @@ export default function NewCropPage() {
                   onChange={handleChange}
                   placeholder="e.g., 25"
                   step="0.5"
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Unit
+                </label>
+                <select
+                  name="seedUnit"
+                  value={formData.seedUnit}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="kg">kg</option>
+                  <option value="g">grams</option>
+                  <option value="packets">Packets</option>
+                  <option value="bags">Bags (50kg)</option>
+                  <option value="stems">Stems/Cuttings</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Seed Cost (ZMW)
+                </label>
+                <input
+                  type="number"
+                  name="seedCost"
+                  value={formData.seedCost}
+                  onChange={handleChange}
+                  placeholder="e.g., 350"
+                  step="0.01"
                   className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
@@ -337,42 +466,73 @@ export default function NewCropPage() {
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               >
-                <option value="RAIN_FED">Rain-fed</option>
-                <option value="DRIP">Drip Irrigation</option>
-                <option value="SPRINKLER">Sprinkler</option>
-                <option value="FLOOD">Flood/Furrow</option>
-                <option value="CENTER_PIVOT">Center Pivot</option>
+                {irrigationTypes.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
               </select>
             </div>
+          </div>
+        </div>
 
-            {/* Soil Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Soil Type
-              </label>
-              <input
-                type="text"
-                name="soilType"
-                value={formData.soilType}
-                onChange={handleChange}
-                placeholder="e.g., Sandy loam, Clay"
-                className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+        {/* Fertilizer & Yield */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <FlaskConical className="w-5 h-5 text-amber-600" />
+            Fertilizer & Expected Yield
+          </h2>
+          <div className="grid gap-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Basal Fertilizer
+                </label>
+                <select
+                  name="basalFertilizer"
+                  value={formData.basalFertilizer}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Select basal fertilizer</option>
+                  {basalFertilizers.map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Top Dressing
+                </label>
+                <select
+                  name="topDressFertilizer"
+                  value={formData.topDressFertilizer}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="">Select top dressing</option>
+                  {topDressFertilizers.map((f) => (
+                    <option key={f} value={f}>{f}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-
-            {/* Fertilizer */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Fertilizer Applied
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex items-center gap-2">
+                <Target className="w-4 h-4 text-green-600" />
+                Expected Yield (kg)
               </label>
               <input
-                type="text"
-                name="fertilizer"
-                value={formData.fertilizer}
+                type="number"
+                name="expectedYield"
+                value={formData.expectedYield}
                 onChange={handleChange}
-                placeholder="e.g., NPK 10-10-10, Urea"
+                placeholder="e.g., 5000"
+                step="1"
+                min="0"
                 className="w-full px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
               />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Target harvest weight for this planting
+              </p>
             </div>
           </div>
         </div>
