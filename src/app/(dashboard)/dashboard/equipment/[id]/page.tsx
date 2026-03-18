@@ -236,6 +236,12 @@ export default function EquipmentDetailPage({
                   {equipment.category.replace('_', ' ')}
                 </p>
               </div>
+              <div>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Quantity</p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  {equipment.quantity || 1} {(equipment.quantity || 1) > 1 ? 'units' : 'unit'}
+                </p>
+              </div>
               {equipment.brand && (
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Brand</p>

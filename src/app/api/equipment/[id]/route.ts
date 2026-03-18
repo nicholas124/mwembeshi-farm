@@ -68,6 +68,7 @@ export async function PUT(
         purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : null,
         purchasePrice: body.purchasePrice ? parseFloat(body.purchasePrice) : null,
         currentValue: body.currentValue ? parseFloat(body.currentValue) : null,
+        quantity: body.quantity || 1,
         location: body.location || null,
         status: body.status,
         condition: body.condition,

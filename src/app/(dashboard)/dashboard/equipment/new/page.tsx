@@ -12,6 +12,7 @@ interface EquipmentFormData {
   brand: string;
   model: string;
   serialNumber: string;
+  quantity: string;
   purchaseDate: string;
   purchasePrice: string;
   currentValue: string;
@@ -34,6 +35,7 @@ export default function NewEquipmentPage() {
     brand: '',
     model: '',
     serialNumber: '',
+    quantity: '1',
     purchaseDate: new Date().toISOString().split('T')[0],
     purchasePrice: '',
     currentValue: '',
@@ -63,6 +65,7 @@ export default function NewEquipmentPage() {
           brand: formData.brand || null,
           model: formData.model || null,
           serialNumber: formData.serialNumber || null,
+          quantity: formData.quantity ? parseInt(formData.quantity) : 1,
           purchaseDate: formData.purchaseDate ? new Date(formData.purchaseDate).toISOString() : null,
           purchasePrice: formData.purchasePrice ? parseFloat(formData.purchasePrice) : null,
           currentValue: formData.currentValue ? parseFloat(formData.currentValue) : null,
@@ -227,6 +230,23 @@ export default function NewEquipmentPage() {
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Quantity <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="quantity"
+                min="1"
+                value={formData.quantity}
+                onChange={handleInputChange}
+                required
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 dark:bg-gray-700 dark:text-white"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                How many of this item do you have? (e.g. 10 hoes = quantity 10)
+              </p>
             </div>
           </div>
         </div>

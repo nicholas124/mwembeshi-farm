@@ -19,21 +19,22 @@ import {
 import { formatDateShort } from '@/lib/utils';
 
 const equipmentEmoji: Record<string, string> = {
-  TRACTOR: '🚜',
-  PUMP: '💧',
-  SPRAYER: '🔫',
-  GENERATOR: '⚡',
-  PLOUGH: '🔧',
-  CHAINSAW: '🪚',
   VEHICLE: '🚗',
-  OTHER: '🔩',
+  TRACTOR: '🚜',
+  HAND_TOOL: '🔨',
+  POWER_TOOL: '🔌',
+  IRRIGATION: '💧',
+  STORAGE: '📦',
+  PROCESSING: '⚙️',
+  OTHER: '🔧',
 };
 
 const statusColors: Record<string, string> = {
   AVAILABLE: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
   IN_USE: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
   MAINTENANCE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  OUT_OF_SERVICE: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  BROKEN: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  RETIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
 };
 
 const conditionColors: Record<string, string> = {
@@ -139,14 +140,19 @@ export default function EquipmentPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-600 dark:text-gray-400">Total Equipment</p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">{equipment.length}</p>
+          {equipment.reduce((sum: number, e: any) => sum + (e.quantity || 1), 0) > equipment.length && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {equipment.reduce((sum: number, e: any) => sum + (e.quantity || 1), 0)} total items
+            </p>
+          )}
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-600 dark:text-gray-400">Available</p>
-          <p className="text-2xl font-bold text-green-600">{equipment.filter(e => e.status === 'AVAILABLE').length}</p>
+          <p className="text-2xl font-bold text-green-600">{equipment.filter((e: any) => e.status === 'AVAILABLE').length}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <p className="text-sm text-gray-600 dark:text-gray-400">In Use</p>
-          <p className="text-2xl font-bold text-blue-600">{equipment.filter(e => e.status === 'IN_USE').length}</p>
+          <p className="text-2xl font-bold text-blue-600">{equipment.filter((e: any) => e.status === 'IN_USE').length}</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
           <div className="flex items-center gap-2">
@@ -196,7 +202,8 @@ export default function EquipmentPage() {
             <option value="AVAILABLE">Available</option>
             <option value="IN_USE">In Use</option>
             <option value="MAINTENANCE">Maintenance</option>
-            <option value="OUT_OF_SERVICE">Out of Service</option>
+            <option value="BROKEN">Broken</option>
+            <option value="RETIRED">Retired</option>
           </select>
         </div>
       </div>
@@ -234,7 +241,12 @@ export default function EquipmentPage() {
                       )}
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.type} • {item.model} • {item.serialNumber}
+                      {item.type.replace('_', ' ')} {item.model ? `• ${item.model}` : ''} {item.serialNumber ? `• ${item.serialNumber}` : ''}
+                      {item.quantity > 1 && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          Qty: {item.quantity}
+                        </span>
+                      )}
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
                       <span className={`flex items-center gap-1 ${conditionColors[item.condition]}`}>

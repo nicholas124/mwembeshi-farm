@@ -1,253 +1,318 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-// Okra Clemson Spineless - Planted 13 March 2026, Mwembeshi Namaya
-// Growing cycle: ~55-60 days to first harvest, continuous harvest for 6-8 weeks
-// First harvest expected: ~7 May 2026
-// Harvest period: May - June 2026
+// ══════════════════════════════════════════════════════════════════════════════
+// OKRA CLEMSON SPINELESS — Complete Growing Plan
+// Location: Lusaka, Zambia
+// Seed planted: 12 March 2026
+// Plan prepared: 18 March 2026 — adjusted for late D Compound application
+// First Harvest Expected: ~23 April 2026
+// Season Length: ~5 Months (through August 2026)
+// ══════════════════════════════════════════════════════════════════════════════
 
-// Spray plan covers 8 weeks (establishment to harvest)
-// Okra pests in Zambia: Aphids, Flea beetles, Whitefly, Bollworm/Fruit borers, Leaf miners
-// Okra diseases: Powdery mildew, Damping off, Cercospora leaf spot, Fusarium wilt
+// Required Inputs — Full Season Reference
+// ─────────────────────────────────────────
+// FERTILIZERS:
+//   D Compound (7:14:7) — 300 kg/ha / ~30 g/m2 — TODAY 18 Mar side-dress (URGENT)
+//   Well-rotted manure/compost — 2-3 kg/m2 — Can still add around plants now
+//   CAN 27% N or Urea 46% — 150 kg/ha / ~15 g/m2 (CAN) — 1 Apr, 10 May, every 3-4 wks
+//   NPK 17:17:17 or Compound S — 200 kg/ha / ~20 g/m2 — 18 Apr (pre-flowering)
+//   Muriate of Potash (MOP 60%) — 75 kg/ha / ~7.5 g/m2 — 28 Apr (pod fill)
+//   Potassium Nitrate (foliar) — 5 g/L spray — 28 Apr onwards
+//   Multifeed Classic 20:20:20 — 2 g/L foliar spray — Mixed with fungicide sprays
+//
+// CHEMICALS / SPRAYS:
+//   Mancozeb 80% WP — 2 g/L — Preventive fungicide (damping off, blight)
+//   Karate (Lambda-cyhalothrin 5% EC) — 10 ml/15 L — Aphids, whiteflies, general insects
+//   Dimethoate 40% EC — 20 ml/15 L — Sucking pest backup
+//   Chlorpyrifos 48% EC — 30 ml/15 L — Pod/fruit borers (Earias spp.)
+//   Emamectin benzoate 5% SG — 8 g/15 L — Pod borers (rotate with Chlorpyrifos)
+//   Abamectin 1.8% EC — 10 ml/15 L — Spider mites
+//   Sulfur 80% WP — 3 g/L — Powdery mildew (dry season, May+)
+//   Trifloxystrobin + Tebuconazole — 10 ml/15 L — Powdery mildew alternative
 
-const sprayPlans = [
-  // ═══════════════════════════════════════════════════
-  // WEEK 1 (13 – 19 March 2026) — ESTABLISHMENT
-  // ═══════════════════════════════════════════════════
+const growingPlan = [
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 1 — Soil Prep, Planting & D Compound Correction
+  // 7 March – 18 March 2026
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    name: 'Week 1 - Fungicide (Damping Off Prevention)',
-    pesticide: 'Mupazeb M (30g) + Introgel SET (5ml)',
-    targetPest: 'Damping off, Soil-borne fungi',
-    dosage: 'Mupazeb M: 30g, Introgel SET: 5ml per 20L water',
-    applicationMethod: 'Soil drench around seedling base',
-    scheduledDate: new Date('2026-03-15'),
-    weatherConditions: 'Apply in the evening after irrigation',
-    safetyPrecautions: 'Wear gloves and mask. Mancozeb is minimally toxic but avoid inhalation.',
-    notes: 'Damping off is the biggest threat at this stage. Keep soil moist but not waterlogged. Irrigation: daily in morning.',
+    name: 'Phase 1 — Bed Preparation (completed)',
+    pesticide: 'N/A — Land preparation',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Tilled soil 30-40 cm deep',
+    scheduledDate: new Date('2026-03-07'),
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'ACTION: Aim for loose, well-draining loam, pH 6.0-6.8. If soil is heavy clay, incorporate coarse river sand + compost for drainage.',
   },
   {
-    name: 'Week 1 - Insect Control (Establishment)',
-    pesticide: 'Actara 25WG (5g) + Introgel SET (5ml)',
-    targetPest: 'Aphids, Flea beetles, Soil insects',
-    dosage: 'Actara 25WG: 5g, Introgel SET: 5ml per 20L water',
-    applicationMethod: 'Foliar spray + soil drench',
-    scheduledDate: new Date('2026-03-17'),
-    weatherConditions: 'Apply early morning (before 09:00) or late afternoon (after 16:00)',
-    safetyPrecautions: 'Wear gloves, mask and protective clothing. Actara is systemic — protect bees.',
-    notes: 'Flea beetles are the #1 pest on young okra seedlings. Actara is systemic so it protects from inside the plant.',
+    name: 'Phase 1 — Planting Day (completed)',
+    pesticide: 'N/A — Seed sowing',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Direct seeding — 2 seeds per hole, 2-3 cm deep',
+    scheduledDate: new Date('2026-03-12'),
+    weatherConditions: 'Seeds soaked 12-24 hrs before sowing',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'ACTION: Spacing 30-45 cm between plants, 60-90 cm between rows. Watered immediately after sowing.',
+  },
+  {
+    name: 'Phase 1 — URGENT: Apply D Compound Side-Dress',
+    pesticide: 'D Compound (7:14:7)',
+    targetPest: 'N/A — Critical fertilizer for root establishment',
+    dosage: '300 kg/ha (~30 g per square metre)',
+    applicationMethod: 'Scatter in a ring 8-10 cm from each seedling stem — do NOT place on leaves or against the stem',
+    scheduledDate: new Date('2026-03-18'),
+    weatherConditions: 'Water in immediately and thoroughly after application',
+    safetyPrecautions: 'Wear gloves. Do not place fertilizer on leaves — will burn.',
+    notes: 'URGENT CORRECTION: D Compound was NOT applied at planting on 12 March 2026. Apply TODAY as emergency side-dress around seedlings. This provides critical phosphorus for root establishment while seedlings are still young enough to benefit fully. Do not delay beyond 18 March — after 10 days post-germination, phosphorus uptake efficiency drops significantly.',
   },
 
-  // ═══════════════════════════════════════════════════
-  // WEEK 2 (20 – 26 March 2026) — SEEDLING GROWTH
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 2 — Germination & Establishment
+  // 12 March – 26 March 2026
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    name: 'Week 2 - Foliar Feed (Vegetative)',
-    pesticide: 'Voema Vegetative NT (20ml)',
-    targetPest: 'N/A - Nutrient supplement for leaf growth',
-    dosage: 'Voema Vegetative NT: 20ml per 20L water',
-    applicationMethod: 'Foliar spray',
+    name: 'Phase 2 — Keep Soil Moist for Germination',
+    pesticide: 'N/A — Watering schedule',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Water lightly every morning',
+    scheduledDate: new Date('2026-03-13'),
+    weatherConditions: 'Keep moist — not waterlogged. April Lusaka can still have rains — adjust watering if rain falls.',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'WATERING (13-17 Mar): Okra germinates in 5-10 days. Expect first seedlings around 17-20 March.',
+  },
+  {
+    name: 'Phase 2 — Thinning Seedlings',
+    pesticide: 'N/A — Thinning action',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Remove weaker seedlings carefully to avoid disturbing roots',
+    scheduledDate: new Date('2026-03-20'),
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'ACTION (20-22 Mar): Once seedlings reach 5-7 cm tall, thin to the strongest plant per hole. Never leave two plants per hole — they will compete and reduce yield.',
+  },
+  {
+    name: 'Phase 2 — First Weeding',
+    pesticide: 'N/A — Weeding action',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Hand-weed or shallow-hoe around seedlings',
     scheduledDate: new Date('2026-03-22'),
-    weatherConditions: 'Apply early morning in cool conditions. Avoid midday heat.',
-    safetyPrecautions: 'Standard precautions. Fertiliser is safe.',
-    notes: 'Okra needs strong vegetative growth early. The 5:1:3 ratio boosts leaf development. Thin seedlings to 1 per station if direct-seeded.',
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Do not disturb shallow roots',
+    notes: 'ACTION (22-26 Mar): Keep a 10 cm clear zone around each plant. Mulch with dry grass or straw to conserve moisture and suppress weeds.',
   },
   {
-    name: 'Week 2 - Insect Control',
-    pesticide: 'Hero Cyper (15ml) + Neemcide (20ml) + Maxi Stic (5ml)',
-    targetPest: 'Flea beetles, Aphids, Caterpillars',
-    dosage: 'Hero Cyper: 15ml, Neemcide: 20ml, Maxi Stic: 5ml per 20L water',
-    applicationMethod: 'Foliar spray — cover both upper and lower leaf surfaces',
+    name: 'Phase 2 — Preventive Fungicide + Foliar Feed',
+    pesticide: 'Mancozeb 80% WP (2 g/L) + Multifeed Classic 20:20:20 (2 g/L)',
+    targetPest: 'Damping off, Early blight',
+    dosage: 'Mancozeb: 2 g/L, Multifeed Classic 20:20:20: 2 g/L',
+    applicationMethod: 'Spray all foliage in early morning or late afternoon',
     scheduledDate: new Date('2026-03-25'),
-    weatherConditions: 'Apply early morning or late afternoon. No rain expected for 4 hours.',
-    safetyPrecautions: 'Cypermethrin is toxic to fish — keep away from water sources. Wear full PPE.',
-    notes: 'Neemcide adds organic broad-spectrum protection. Target underside of leaves where aphids hide.',
+    weatherConditions: 'NEVER spray in midday heat',
+    safetyPrecautions: 'Wear mask and gloves. Avoid inhalation of Mancozeb dust.',
+    notes: 'SPRAY: This prevents damping off and early blight while feeding the young plants. Mixed with fungicide sprays for efficiency.',
   },
 
-  // ═══════════════════════════════════════════════════
-  // WEEK 3 (27 March – 2 April 2026) — VEGETATIVE GROWTH
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 3 — Vegetative Growth
+  // 1 April – 20 April 2026
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    name: 'Week 3 - Fungicide (Leaf Spot Prevention)',
-    pesticide: 'Amistar Top (10ml) + Introgel SET (5ml)',
-    targetPest: 'Cercospora leaf spot, Powdery mildew',
-    dosage: 'Amistar Top: 10ml, Introgel SET: 5ml per 20L water',
-    applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-03-29'),
-    weatherConditions: 'Avoid rain for 6 hours after application. Apply in dry conditions.',
-    safetyPrecautions: 'Wear protective gear. Amistar Top is a systemic fungicide — very effective.',
-    notes: 'Rainy season means high disease pressure. Amistar Top provides both preventive and curative action. Weed around plants this week.',
-  },
-  {
-    name: 'Week 3 - Foliar Feed + Micronutrients',
-    pesticide: 'Voema Vegetative NT (20ml) + OMEX ZiBo (10ml)',
-    targetPest: 'N/A - Nutrient supplement (Zinc + Boron + NPK)',
-    dosage: 'Voema Vegetative NT: 20ml, OMEX ZiBo: 10ml per 20L water',
-    applicationMethod: 'Foliar spray',
+    name: 'Phase 3 — First Topdress: Nitrogen Boost',
+    pesticide: 'CAN (Calcium Ammonium Nitrate 27% N) or Urea (46% N)',
+    targetPest: 'N/A — Nitrogen fertilizer for vegetative growth',
+    dosage: 'CAN: 150 kg/ha (~15 g/m2) OR Urea 46% N at 75 kg/ha',
+    applicationMethod: 'Ring application 10 cm from plant base',
     scheduledDate: new Date('2026-04-01'),
-    weatherConditions: 'Apply early morning in cool conditions',
+    weatherConditions: 'Water in immediately after application',
+    safetyPrecautions: 'Do NOT place on leaves — will burn.',
+    notes: 'FERTILIZER: First nitrogen topdress to boost vegetative growth. Repeat on 10 May, then every 3-4 weeks.',
+  },
+  {
+    name: 'Phase 3 — Pest Scout & Insecticide (if needed)',
+    pesticide: 'Karate (Lambda-cyhalothrin 5% EC) OR Dimethoate 40% EC',
+    targetPest: 'Aphids, Whiteflies, Shoot borers',
+    dosage: 'Karate: 10 ml/15 L knapsack, OR Dimethoate 40% EC: 20 ml/15 L',
+    applicationMethod: 'Foliar spray — spray the underside of leaves',
+    scheduledDate: new Date('2026-04-03'),
+    weatherConditions: 'Apply early morning or late afternoon',
+    safetyPrecautions: 'Wear full PPE. Lambda-cyhalothrin toxic to aquatic life.',
+    notes: 'SPRAY: Scout for aphids, whiteflies, and shoot borers. If infestation confirmed, spray. Dimethoate for sucking insects.',
+  },
+  {
+    name: 'Phase 3 — Establish Watering Routine',
+    pesticide: 'N/A — Irrigation schedule',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Irrigate early morning at the plant base',
+    scheduledDate: new Date('2026-04-07'),
+    weatherConditions: 'Adjust for any remaining April rains',
+    safetyPrecautions: 'Avoid wetting leaves excessively',
+    notes: 'WATERING: Water every 2-3 days. Okra tolerates some drought but consistent moisture is essential for yield.',
+  },
+  {
+    name: 'Phase 3 — Second Weeding + Earthing Up',
+    pesticide: 'N/A — Weeding and earthing up',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Weed thoroughly. Earth up soil around plant stems to support upright growth and cover surface roots.',
+    scheduledDate: new Date('2026-04-10'),
+    weatherConditions: 'Any conditions',
     safetyPrecautions: 'Standard precautions',
-    notes: 'Boron helps flower development later. Zinc boosts overall growth. Apply D-Compound basal fertilizer to soil this week (5g per plant).',
-  },
-
-  // ═══════════════════════════════════════════════════
-  // WEEK 4 (3 – 9 April 2026) — PRE-FLOWERING
-  // ═══════════════════════════════════════════════════
-  {
-    name: 'Week 4 - Insect Control (Bollworm Prevention)',
-    pesticide: 'Emacide/Benzo Extra (10g) + Maxi Stic (5ml)',
-    targetPest: 'Bollworm/Fruit borer, Caterpillars, Leaf rollers',
-    dosage: 'Emacide (Emamectin Benzoate): 10g, Maxi Stic: 5ml per 20L water',
-    applicationMethod: 'Foliar spray — thorough coverage of growing tips',
-    scheduledDate: new Date('2026-04-05'),
-    weatherConditions: 'Apply late afternoon. Emamectin works best in cool conditions.',
-    safetyPrecautions: 'Harmful if inhaled. Wear full PPE. Keep out of reach of children. Toxic to fish.',
-    notes: 'Emamectin Benzoate is the best caterpillar/bollworm control. Critical to apply before flowering starts — bollworms attack flower buds and young pods.',
+    notes: 'ACTION: Replenish mulch layer. Plants should now be 25-35 cm tall.',
   },
   {
-    name: 'Week 4 - Fungicide',
-    pesticide: 'Mupazeb M (30g) + Uthane M-45 (30g) + Introgel SET (5ml)',
-    targetPest: 'Powdery mildew, Downy mildew, Cercospora',
-    dosage: 'Use either Mupazeb M OR Uthane M-45: 30g, Introgel SET: 5ml per 20L water (both are Mancozeb — alternate with Amistar Top)',
+    name: 'Phase 3 — Fungicide + Foliar Feed (Repeat)',
+    pesticide: 'Mancozeb 80% WP (2 g/L) + Multifeed Classic 20:20:20 (2 g/L)',
+    targetPest: 'Leaf curl, Yellowing, Black spots',
+    dosage: 'Mancozeb: 2 g/L, Multifeed Classic 20:20:20: 2 g/L',
     applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-04-08'),
-    weatherConditions: 'Avoid rain for 6 hours. Apply in dry conditions.',
-    safetyPrecautions: 'Wear mask — Mancozeb dust irritates respiratory system.',
-    notes: 'Alternate Mancozeb and Amistar Top to prevent resistance build-up.',
-  },
-
-  // ═══════════════════════════════════════════════════
-  // WEEK 5 (10 – 16 April 2026) — FLOWERING
-  // ═══════════════════════════════════════════════════
-  {
-    name: 'Week 5 - Foliar Feed (Flowering)',
-    pesticide: 'Voema Flower & Fruit (20ml) + OMEX ZiBo (15ml)',
-    targetPest: 'N/A - Nutrient supplement for flowering & fruit set',
-    dosage: 'Voema Flower & Fruit: 20ml, OMEX ZiBo: 15ml per 20L water',
-    applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-04-12'),
-    weatherConditions: 'Apply early morning. Avoid spraying open flowers in full sun.',
-    safetyPrecautions: 'Standard precautions',
-    notes: 'Okra starts flowering around day 30-35. Boron is critical for flower-to-fruit conversion. Switch from Voema Vegetative to Flower & Fruit formula.',
-  },
-  {
-    name: 'Week 5 - Insect + Disease Combo',
-    pesticide: 'Tuta-Max (10ml) + Amistar Top (10ml) + Maxi Stic (5ml)',
-    targetPest: 'Whitefly, Leaf miner, Thrips + Fungal diseases',
-    dosage: 'Tuta-Max: 10ml, Amistar Top: 10ml, Maxi Stic: 5ml per 20L water',
-    applicationMethod: 'Foliar spray — full coverage',
     scheduledDate: new Date('2026-04-15'),
-    weatherConditions: 'Apply early morning or late afternoon. No rain for 4 hours.',
-    safetyPrecautions: 'Chlorfenapyr (Tuta-Max) is toxic — full PPE required. Do not spray near water.',
-    notes: 'Tuta-Max controls mites and leaf miners that Cypermethrin misses. Combo spray saves time during busy flowering period.',
+    weatherConditions: 'Spray early morning or late afternoon only',
+    safetyPrecautions: 'Wear mask and gloves.',
+    notes: 'SPRAY: Repeat preventive fungicide. Watch for leaf curl, yellowing, or black spots. Spray every 10 days as preventive measure.',
+  },
+  {
+    name: 'Phase 3 — Second Topdress: Pre-Flowering',
+    pesticide: 'NPK 17:17:17 or Compound S (7:21:7 + Sulfur)',
+    targetPest: 'N/A — Pre-flowering fertilizer for phosphorus and sulfur',
+    dosage: 'NPK 17:17:17: 200 kg/ha (~20 g/m2)',
+    applicationMethod: 'Ring application 15 cm from stem',
+    scheduledDate: new Date('2026-04-18'),
+    weatherConditions: 'Water thoroughly after',
+    safetyPrecautions: 'Wear gloves. Avoid contact with foliage.',
+    notes: 'FERTILIZER: This promotes healthy flower bud formation. Phosphorus and sulfur are key nutrients at this stage.',
   },
 
-  // ═══════════════════════════════════════════════════
-  // WEEK 6 (17 – 23 April 2026) — EARLY FRUITING
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 4 — Flowering
+  // 20 April – 5 May 2026
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    name: 'Week 6 - Insect Control (Pod Protection)',
-    pesticide: 'Emacide/Benzo Extra (10g) + Actara 25WG (3g) + Introgel SET (5ml)',
-    targetPest: 'Bollworm/Fruit borer, Aphids on pods, Thrips',
-    dosage: 'Emacide: 10g, Actara: 3g, Introgel SET: 5ml per 20L water',
-    applicationMethod: 'Foliar spray — target developing pods and flowers',
-    scheduledDate: new Date('2026-04-19'),
-    weatherConditions: 'Apply early morning before bees are active',
-    safetyPrecautions: 'Both Emamectin and Actara toxic to bees — spray early morning only. Full PPE.',
-    notes: 'Critical spray! Bollworm larvae bore into young okra pods. Emamectin kills larvae already inside pods.',
+    name: 'Phase 4 — Flowering Begins',
+    pesticide: 'N/A — Flowering milestone',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'N/A — Monitor plants',
+    scheduledDate: new Date('2026-04-20'),
+    weatherConditions: 'CRITICAL: Keep plants consistently watered during flowering — any water stress causes flower drop and drastically reduces yield',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'ACTION (20-25 Apr): Clemson Spineless flowers 40-55 days after planting. Expect first large yellow flowers (with purple/red centre) around 20-25 April. Flowers are self-pollinating — no hand pollination needed.',
   },
   {
-    name: 'Week 6 - Fungicide + Foliar Feed',
-    pesticide: 'Mupazeb M (30g) + Voema Flower & Fruit (20ml)',
-    targetPest: 'Powdery mildew, Pod rot + Fruit nutrition',
-    dosage: 'Mupazeb M: 30g, Voema Flower & Fruit: 20ml per 20L water',
+    name: 'Phase 4 — Pest Control: Pod Borers & Spider Mites',
+    pesticide: 'Chlorpyrifos 48% EC OR Emamectin benzoate 5% SG + Abamectin 1.8% EC',
+    targetPest: 'Pod/fruit borers (Earias spp.), Spider mites',
+    dosage: 'Chlorpyrifos: 30 ml/15 L, OR Emamectin benzoate: 8 g/15 L. For spider mites: Abamectin 1.8% EC at 10 ml/15 L',
     applicationMethod: 'Foliar spray',
     scheduledDate: new Date('2026-04-22'),
-    weatherConditions: 'Apply in dry conditions. Avoid rain for 6 hours.',
-    safetyPrecautions: 'Wear mask for Mancozeb dust.',
-    notes: 'Apply CAN top-dressing fertilizer to soil this week (1 teaspoon per plant around base).',
+    weatherConditions: 'Always spray AFTER bees are inactive — late afternoon',
+    safetyPrecautions: 'Full PPE required. IMPORTANT: rotate chemicals to prevent resistance.',
+    notes: 'SPRAY: Once flowering starts, scout intensively for pod/fruit borers (Earias spp.). Always spray AFTER bees are inactive — late afternoon.',
+  },
+  {
+    name: 'Phase 4 — Potassium Boost: Pod Fill',
+    pesticide: 'Potassium Nitrate (KNO3) foliar OR Muriate of Potash (MOP 60%)',
+    targetPest: 'N/A — Potassium for pod size, quality, flavour, and disease resistance',
+    dosage: 'KNO3: 5 g/L foliar spray, OR MOP 60%: 75 kg/ha (~7.5 g/m2) soil application',
+    applicationMethod: 'Foliar spray of KNO3 at 5 g/L, OR apply Muriate of Potash to soil',
+    scheduledDate: new Date('2026-04-28'),
+    weatherConditions: 'Apply after watering',
+    safetyPrecautions: 'Standard precautions. Wear gloves for soil application.',
+    notes: 'FERTILIZER: Potassium improves pod size, quality, flavour, and disease resistance. Continue foliar KNO3 from 28 Apr onwards.',
   },
 
-  // ═══════════════════════════════════════════════════
-  // WEEK 7 (24 – 30 April 2026) — HARVESTING BEGINS
-  // ═══════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE 5 — Harvest & Ongoing Maintenance
+  // Late April – August 2026
+  // ═══════════════════════════════════════════════════════════════════════════
   {
-    name: 'Week 7 - Foliar Feed (Sustained Production)',
-    pesticide: 'Voema Flower & Fruit (20ml) + OMEX ZiBo (15ml)',
-    targetPest: 'N/A - Sustain pod production',
-    dosage: 'Voema Flower & Fruit: 20ml, OMEX ZiBo: 15ml per 20L water',
-    applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-04-26'),
-    weatherConditions: 'Apply early morning',
-    safetyPrecautions: 'Standard precautions',
-    notes: '⚠️ HARVEST starts this week! Pick pods every 2-3 days when 7-10cm long (finger length). Do NOT let pods get tough/woody.',
+    name: 'Phase 5 — First Harvest: Begin Picking',
+    pesticide: 'N/A — Harvest begins',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Harvest when pods are 7-10 cm long (finger length) and snap cleanly',
+    scheduledDate: new Date('2026-04-23'),
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Wear gloves — the plant has fine hairs that irritate skin.',
+    notes: 'HARVEST (23 Apr – 10 May): Pods are ready 4-6 days after flower drop. Overripe pods become tough/fibrous and signal the plant to stop producing.',
   },
   {
-    name: 'Week 7 - Safe Insect Control (Harvest Period)',
-    pesticide: 'Neemcide (30ml) + Maxi Stic (5ml)',
-    targetPest: 'Aphids, Whitefly, General pest prevention',
-    dosage: 'Neemcide: 30ml, Maxi Stic: 5ml per 20L water',
-    applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-04-29'),
-    weatherConditions: 'Apply late afternoon after harvest for the day',
-    safetyPrecautions: 'Neemcide is botanical/organic — safe to use near harvest. Observe 1-day PHI.',
-    notes: 'During harvest, use only Neemcide for insect control — it has the shortest pre-harvest interval. Harvest BEFORE spraying each time.',
-  },
-
-  // ═══════════════════════════════════════════════════
-  // WEEK 8 (1 – 7 May 2026) — PEAK HARVEST
-  // ═══════════════════════════════════════════════════
-  {
-    name: 'Week 8 - Fungicide (Harvest Period)',
-    pesticide: 'Amistar Top (10ml) + Introgel SET (5ml)',
-    targetPest: 'Pod rot, Leaf diseases during wet conditions',
-    dosage: 'Amistar Top: 10ml, Introgel SET: 5ml per 20L water',
-    applicationMethod: 'Foliar spray — avoid direct spraying on pods ready to harvest',
-    scheduledDate: new Date('2026-05-03'),
-    weatherConditions: 'Apply after harvest. No rain for 6 hours.',
-    safetyPrecautions: 'Observe 7-day pre-harvest interval for Amistar Top. Only spray AFTER picking.',
-    notes: 'Peak harvest period. Pick pods every 2 days. Spray only after harvesting the day\'s pods. Keep plants healthy for prolonged production.',
+    name: 'Phase 5 — Ongoing Harvest Schedule',
+    pesticide: 'N/A — Harvest schedule',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Harvest every 2-3 days',
+    scheduledDate: new Date('2026-05-01'),
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Wear gloves — okra plant hairs irritate skin.',
+    notes: 'HARVEST (Every 2-3 days, May-Jul): Okra MUST be harvested every 2-3 days. Leaving pods on the plant tells it to stop producing new flowers. Regular picking = continuous yield for 3-4 months. This is the single most important harvesting rule.',
   },
   {
-    name: 'Week 8 - Foliar Feed (Keep Producing)',
-    pesticide: 'Voema Flower & Fruit (20ml)',
-    targetPest: 'N/A - Sustain flowering and pod production',
-    dosage: 'Voema Flower & Fruit: 20ml per 20L water',
-    applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-05-06'),
-    weatherConditions: 'Apply early morning',
-    safetyPrecautions: 'Standard precautions',
-    notes: 'Continue harvesting every 2-3 days. Foliar feed keeps new flowers and pods coming.',
-  },
-
-  // ═══════════════════════════════════════════════════
-  // WEEK 9-10 (8 – 21 May 2026) — CONTINUED HARVEST
-  // ═══════════════════════════════════════════════════
-  {
-    name: 'Week 9 - Safe Pest Control + Feed',
-    pesticide: 'Neemcide (30ml) + Voema Flower & Fruit (20ml)',
-    targetPest: 'General pest prevention + Nutrition',
-    dosage: 'Neemcide: 30ml, Voema Flower & Fruit: 20ml per 20L water',
-    applicationMethod: 'Foliar spray — after harvesting',
+    name: 'Phase 5 — Third Topdress: Sustain Production',
+    pesticide: 'CAN or Urea',
+    targetPest: 'N/A — Nitrogen fertilizer to sustain pod production',
+    dosage: 'CAN: 150 kg/ha (~15 g/m2) OR Urea at same rate as 1 April',
+    applicationMethod: 'Ring application around plant base',
     scheduledDate: new Date('2026-05-10'),
-    weatherConditions: 'Apply after harvest. Cool conditions.',
-    safetyPrecautions: 'Botanical insecticide — low toxicity. Always harvest before spraying.',
-    notes: 'Continue picking every 2-3 days. Remove any diseased or oversized pods to maintain plant vigour.',
+    weatherConditions: 'Water in after application',
+    safetyPrecautions: 'Avoid leaf contact.',
+    notes: 'FERTILIZER: Repeat every 3-4 weeks through the harvest period to maintain vigorous pod production.',
   },
   {
-    name: 'Week 10 - Final Foliar Feed',
-    pesticide: 'Voema Flower & Fruit (20ml) + OMEX ZiBo (10ml)',
-    targetPest: 'N/A - Final nutrition boost',
-    dosage: 'Voema Flower & Fruit: 20ml, OMEX ZiBo: 10ml per 20L water',
+    name: 'Phase 5 — Fungicide: Powdery Mildew Prevention',
+    pesticide: 'Sulfur 80% WP (3 g/L) OR Trifloxystrobin + Tebuconazole (10 ml/15 L)',
+    targetPest: 'Powdery mildew (white dusty coating on leaves)',
+    dosage: 'Sulfur 80% WP: 3 g/L, OR Trifloxystrobin + Tebuconazole: 10 ml/15 L',
     applicationMethod: 'Foliar spray',
-    scheduledDate: new Date('2026-05-17'),
-    weatherConditions: 'Apply early morning',
+    scheduledDate: new Date('2026-05-15'),
+    weatherConditions: 'Spray early morning or late afternoon',
+    safetyPrecautions: 'Wear mask and gloves. Sulfur can irritate eyes.',
+    notes: 'SPRAY: As cooler/drier May weather arrives, watch for powdery mildew (white dusty coating on leaves). Spray every 10-14 days as needed.',
+  },
+  {
+    name: 'Phase 5 — Adjust Watering for Dry Season',
+    pesticide: 'N/A — Irrigation adjustment',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Increase to irrigating every 2 days. Double the mulch layer to conserve soil moisture.',
+    scheduledDate: new Date('2026-05-20'),
+    weatherConditions: 'Lusaka dry season deepens in May-July',
     safetyPrecautions: 'Standard precautions',
-    notes: 'Last week of intensive harvest. If plants are still productive, continue with Neemcide-only sprays every 5-7 days. Leave some pods to mature for seed saving if desired.',
+    notes: 'WATERING (May-Jul ongoing): Drip or furrow irrigation is ideal. Okra tolerates some drought but pod quality drops without consistent moisture at the root zone.',
+  },
+  {
+    name: 'Phase 5 — End of Season: Final Harvest & Clear',
+    pesticide: 'N/A — Season end',
+    targetPest: 'N/A',
+    dosage: 'N/A',
+    applicationMethod: 'Allow last few pods to fully mature and dry on the plant for seed saving',
+    scheduledDate: new Date('2026-08-01'),
+    weatherConditions: 'Any conditions',
+    safetyPrecautions: 'Standard precautions',
+    notes: 'ACTION (August 2026): Clemson Spineless seeds store well for 2-3 years in a cool dry place. Clear all plant debris from beds. Incorporate compost and rest the soil, or rotate with a legume crop (beans/cowpeas) to restore nitrogen.',
   },
 ];
 
+// Key Tips for Lusaka Conditions:
+// - March/April: End of rainy season — monitor soil moisture carefully. Do not overwater in first 6 weeks. If rain falls, skip irrigation that day.
+// - May onwards: Dry season arrives fast — ramp up irrigation and double your mulch layer immediately.
+// - Biggest pest threats: Aphids early on (March-April), Pod borers once flowering starts (April+). Scout every 3 days from April onwards.
+// - Always spray chemicals in early morning or late afternoon — NEVER in midday heat. This prevents leaf burn and protects pollinators.
+// - Always rotate insecticide chemicals (do not use the same product twice in a row) to prevent pest resistance building up.
+// - Clemson Spineless is one of the most reliable and productive okra varieties — if you follow this plan consistently, expect excellent yields from late April through August.
+
 async function main() {
-  console.log('🌿 Adding spray plans for Okra (Clemson Spineless) - Mwembeshi Namaya...\n');
+  console.log('🌿 Adding COMPLETE Growing Plan for Okra (Clemson Spineless) - Lusaka, Zambia...\n');
+  console.log('📅 Planted: 12 March 2026');
+  console.log('🌱 First Harvest Expected: ~23 April 2026');
+  console.log('📆 Season Length: ~5 Months (through August 2026)\n');
 
   // First, find the Okra crop type
   const okraCropType = await prisma.cropType.findFirst({
@@ -270,10 +335,10 @@ async function main() {
       data: {
         name: 'Mwembeshi Namaya',
         size: 1.0,
-        location: 'Namaya section, Mwembeshi',
+        location: 'Lusaka, Zambia',
         soilType: 'Sandy loam',
         irrigation: 'RAINFED',
-        notes: 'Okra planting field',
+        notes: 'Okra planting field — Namaya section, Mwembeshi',
       }
     });
     console.log(`✅ Created field: ${field.name}`);
@@ -295,40 +360,41 @@ async function main() {
       data: {
         cropTypeId: okraCropType.id,
         fieldId: field.id,
-        plantingDate: new Date('2026-03-13'),
-        expectedHarvest: new Date('2026-05-07'),
+        plantingDate: new Date('2026-03-12'),
+        expectedHarvest: new Date('2026-04-23'),
         areaPlanted: 0.5,
         variety: 'Clemson Spineless',
         seedSource: 'Local Market',
         plantingMethod: 'DIRECT_SEEDING',
-        spacingRows: 60,
-        spacingPlants: 30,
+        spacingRows: 75,
+        spacingPlants: 37,
         health: 'GOOD',
-        basalFertilizer: 'D-Compound',
-        topDressFertilizer: 'CAN',
+        basalFertilizer: 'D-Compound (7:14:7)',
+        topDressFertilizer: 'CAN 27% N',
         status: 'PLANTED',
         season: 'RAINY',
-        notes: 'Okra Clemson Spineless planted in Mwembeshi Namaya. Direct seeded. Expected first harvest around 7 May 2026. Continuous harvesting for 6-8 weeks.',
+        notes: 'Okra Clemson Spineless — Complete Growing Plan. Planted 12 March 2026, Lusaka, Zambia. First harvest expected ~23 April 2026. Season ~5 months through August 2026. Plan adjusted for late D Compound application.',
       },
       include: { cropType: true, field: true }
     });
     console.log(`✅ Created planting: ${planting.cropType.name} (${planting.variety}) in ${planting.field.name}`);
   } else {
-    // Update existing planting with variety info
+    // Update existing planting
     planting = await prisma.planting.update({
       where: { id: planting.id },
       data: {
         variety: 'Clemson Spineless',
-        plantingDate: new Date('2026-03-13'),
-        expectedHarvest: new Date('2026-05-07'),
+        plantingDate: new Date('2026-03-12'),
+        expectedHarvest: new Date('2026-04-23'),
         plantingMethod: 'DIRECT_SEEDING',
-        spacingRows: 60,
-        spacingPlants: 30,
+        spacingRows: 75,
+        spacingPlants: 37,
         health: 'GOOD',
-        basalFertilizer: 'D-Compound',
-        topDressFertilizer: 'CAN',
+        basalFertilizer: 'D-Compound (7:14:7)',
+        topDressFertilizer: 'CAN 27% N',
         status: 'PLANTED',
         season: 'RAINY',
+        notes: 'Okra Clemson Spineless — Complete Growing Plan. Planted 12 March 2026, Lusaka, Zambia. First harvest expected ~23 April 2026. Season ~5 months through August 2026. Plan adjusted for late D Compound application.',
       },
       include: { cropType: true, field: true }
     });
@@ -344,12 +410,19 @@ async function main() {
     where: { plantingId: planting.id }
   });
   if (deleted.count > 0) {
-    console.log(`Removed ${deleted.count} existing spray plans.\n`);
+    console.log(`Removed ${deleted.count} existing plans.\n`);
   }
 
-  // Add all spray plans
+  // Add all growing plan tasks
   let created = 0;
-  for (const plan of sprayPlans) {
+  let currentPhase = '';
+  for (const plan of growingPlan) {
+    const phase = plan.name.split('—')[0].trim();
+    if (phase !== currentPhase) {
+      currentPhase = phase;
+      console.log(`\n── ${phase} ──`);
+    }
+
     await prisma.sprayPlan.create({
       data: {
         plantingId: planting.id,
@@ -358,18 +431,36 @@ async function main() {
       }
     });
     created++;
-    console.log(`✅ ${plan.name} — ${plan.scheduledDate.toISOString().split('T')[0]}`);
+    console.log(`  ✅ ${plan.name} — ${plan.scheduledDate.toISOString().split('T')[0]}`);
   }
 
-  console.log(`\n🎉 Successfully added ${created} spray plans for Okra!`);
-  console.log('\n📋 CHEMICALS USED (from your store):');
-  console.log('  Fungicides: Mupazeb M, Uthane M-45, Amistar Top');
-  console.log('  Insecticides: Actara 25WG, Hero Cyper, Tuta-Max, Emacide/Benzo Extra, Neemcide');
-  console.log('  Foliar Feeds: Voema Vegetative NT, Voema Flower & Fruit, OMEX ZiBo');
-  console.log('  Adjuvants: Introgel SET, Maxi Stic');
-  console.log('\n📌 MISSING (consider buying):');
-  console.log('  • Ridomil Gold MZ (Metalaxyl + Mancozeb) — best for damping off if Mancozeb alone isn\'t enough');
-  console.log('  • Lambda-cyhalothrin (e.g., Karate) — broad-spectrum alternative to rotate with Cypermethrin');
+  console.log(`\n🎉 Successfully added ${created} growing plan tasks for Okra Clemson Spineless!`);
+
+  console.log('\n📋 REQUIRED INPUTS SUMMARY:');
+  console.log('  FERTILIZERS:');
+  console.log('    D Compound (7:14:7) — 300 kg/ha — 18 Mar (URGENT side-dress)');
+  console.log('    CAN 27% N or Urea 46% — 150 kg/ha — 1 Apr, 10 May, every 3-4 wks');
+  console.log('    NPK 17:17:17 or Compound S — 200 kg/ha — 18 Apr (pre-flowering)');
+  console.log('    Muriate of Potash (MOP 60%) — 75 kg/ha — 28 Apr (pod fill)');
+  console.log('    Potassium Nitrate (foliar) — 5 g/L — 28 Apr onwards');
+  console.log('    Multifeed Classic 20:20:20 — 2 g/L foliar — with fungicide sprays');
+  console.log('  CHEMICALS / SPRAYS:');
+  console.log('    Mancozeb 80% WP — 2 g/L — Preventive fungicide');
+  console.log('    Karate (Lambda-cyhalothrin 5% EC) — 10 ml/15 L — General insects');
+  console.log('    Dimethoate 40% EC — 20 ml/15 L — Sucking pests');
+  console.log('    Chlorpyrifos 48% EC — 30 ml/15 L — Pod borers');
+  console.log('    Emamectin benzoate 5% SG — 8 g/15 L — Pod borers (rotate)');
+  console.log('    Abamectin 1.8% EC — 10 ml/15 L — Spider mites');
+  console.log('    Sulfur 80% WP — 3 g/L — Powdery mildew');
+  console.log('    Trifloxystrobin + Tebuconazole — 10 ml/15 L — Powdery mildew alternative');
+
+  console.log('\n🌿 KEY TIPS FOR LUSAKA CONDITIONS:');
+  console.log('  • March/April: End of rainy season — monitor soil moisture, don\'t overwater');
+  console.log('  • May onwards: Dry season — ramp up irrigation, double mulch layer');
+  console.log('  • Biggest pests: Aphids (Mar-Apr), Pod borers (Apr+). Scout every 3 days');
+  console.log('  • NEVER spray in midday heat — early morning or late afternoon only');
+  console.log('  • Rotate insecticides — never use the same product twice in a row');
+  console.log('  • Harvest every 2-3 days — the single most important rule for continuous yield');
 }
 
 main()

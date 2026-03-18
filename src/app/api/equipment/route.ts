@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
         purchaseDate: body.purchaseDate ? new Date(body.purchaseDate) : null,
         purchasePrice: body.purchasePrice,
         currentValue: body.purchasePrice, // Initially same as purchase price
+        quantity: body.quantity || 1,
         location: body.location,
         status: 'AVAILABLE',
         condition: body.condition || 'GOOD',
