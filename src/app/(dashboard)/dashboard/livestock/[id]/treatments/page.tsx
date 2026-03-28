@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Plus, Syringe, Heart, Activity, AlertCircle, Calendar, Clock, DollarSign } from 'lucide-react';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDate, formatDateShort } from '@/lib/utils';
 
 const treatmentIcons: Record<string, React.ReactNode> = {
@@ -28,10 +28,9 @@ const treatmentColors: Record<string, string> = {
 export default function TreatmentsHistoryPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
   
   const [animal, setAnimal] = useState<any>(null);
   const [treatments, setTreatments] = useState<any[]>([]);

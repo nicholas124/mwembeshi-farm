@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Plus, Milk, Egg, Activity, Calendar, TrendingUp } from 'lucide-react';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDate, formatDateShort } from '@/lib/utils';
 
 const productionIcons: Record<string, React.ReactNode> = {
@@ -22,10 +22,9 @@ const productionColors: Record<string, string> = {
 export default function ProductionHistoryPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
   
   const [animal, setAnimal] = useState<any>(null);
   const [production, setProduction] = useState<any[]>([]);

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 
 const goatBreeds = [
@@ -20,10 +20,9 @@ const statusOptions = [
   { value: 'SLAUGHTERED', label: 'Slaughtered', color: 'border-red-500 bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-300' },
 ];
 
-export default function EditGoatPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditGoatPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);

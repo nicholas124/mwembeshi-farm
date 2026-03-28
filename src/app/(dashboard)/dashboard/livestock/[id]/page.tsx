@@ -23,7 +23,7 @@ import {
   Tag,
   Clock,
 } from 'lucide-react';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDate, formatDateShort, formatMonth } from '@/lib/utils';
 
 const animalTypeEmoji: Record<string, string> = {
@@ -132,11 +132,10 @@ function SectionCard({
 export default function AnimalDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
   
   const [animal, setAnimal] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, Plus, Baby, Calendar, Heart, AlertCircle } from 'lucide-react';
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { formatDate, formatDateShort } from '@/lib/utils';
 
 const breedingStatusColors: Record<string, string> = {
@@ -22,10 +22,9 @@ const breedingStatusIcons: Record<string, React.ReactNode> = {
 export default function BreedingHistoryPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
   
   const [animal, setAnimal] = useState<any>(null);
   const [breeding, setBreeding] = useState<any[]>([]);
