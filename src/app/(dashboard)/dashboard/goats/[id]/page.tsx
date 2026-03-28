@@ -77,6 +77,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
 
   const [showWeightModal, setShowWeightModal] = useState(false);
   const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+  const [editingTreatmentId, setEditingTreatmentId] = useState<string | null>(null);
   const [showProductionModal, setShowProductionModal] = useState(false);
   const [showBreedingModal, setShowBreedingModal] = useState(false);
 
@@ -160,24 +161,46 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
     finally { setSubmitting(false); }
   };
 
+  const openEditTreatment = (treatment: any) => {
+    setEditingTreatmentId(treatment.id);
+    setTreatmentForm({
+      type: treatment.type || 'VACCINATION',
+      description: treatment.description || '',
+      medication: treatment.medication || '',
+      dosage: treatment.dosage || '',
+      cost: treatment.cost ? String(treatment.cost) : '',
+      treatmentDate: treatment.treatmentDate ? new Date(treatment.treatmentDate).toISOString().split('T')[0] : '',
+      nextDueDate: treatment.nextDueDate ? new Date(treatment.nextDueDate).toISOString().split('T')[0] : '',
+      veterinarian: treatment.veterinarian || '',
+      notes: treatment.notes || '',
+    });
+    setShowTreatmentModal(true);
+  };
+
+  const resetTreatmentForm = () => {
+    setEditingTreatmentId(null);
+    setTreatmentForm({ type: 'VACCINATION', description: '', medication: '', dosage: '', cost: '', treatmentDate: '', nextDueDate: '', veterinarian: '', notes: '' });
+  };
+
   const handleTreatmentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const isEditing = !!editingTreatmentId;
       const response = await fetch(`/api/animals/${id}/treatments`, {
-        method: 'POST',
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(treatmentForm),
+        body: JSON.stringify(isEditing ? { ...treatmentForm, treatmentId: editingTreatmentId } : treatmentForm),
       });
       if (response.ok) {
         setShowTreatmentModal(false);
-        setTreatmentForm({ type: 'VACCINATION', description: '', medication: '', dosage: '', cost: '', treatmentDate: '', nextDueDate: '', veterinarian: '', notes: '' });
+        resetTreatmentForm();
         refreshData();
       } else {
         const err = await response.json();
-        alert(err.error || 'Failed to add treatment');
+        alert(err.error || `Failed to ${isEditing ? 'update' : 'add'} treatment`);
       }
-    } catch { alert('Failed to add treatment'); }
+    } catch { alert(`Failed to ${editingTreatmentId ? 'update' : 'add'} treatment`); }
     finally { setSubmitting(false); }
   };
 
@@ -345,7 +368,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
           <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0"><Scale className="w-4 h-4 text-blue-600 dark:text-blue-400" /></div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 text-left">Record Weight</span>
         </button>
-        <button onClick={() => setShowTreatmentModal(true)} className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/10 hover:border-purple-200 transition-all active:scale-[0.97] group">
+        <button onClick={() => { resetTreatmentForm(); setShowTreatmentModal(true); }} className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-900/10 hover:border-purple-200 transition-all active:scale-[0.97] group">
           <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0"><Syringe className="w-4 h-4 text-purple-600 dark:text-purple-400" /></div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-purple-700 text-left">Treatment</span>
         </button>
@@ -446,7 +469,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
         <SectionCard
           title="Treatments & Health"
           icon={<Syringe className="w-4 h-4 text-purple-500" />}
-          action={<button onClick={() => setShowTreatmentModal(true)} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
+          action={<button onClick={() => { resetTreatmentForm(); setShowTreatmentModal(true); }} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
         >
           {goat.treatments?.length > 0 ? (
             <div className="space-y-3">
@@ -464,6 +487,13 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">📅 Next due: {formatDateShort(treatment.nextDueDate)}</p>
                     )}
                   </div>
+                  <button
+                    onClick={() => openEditTreatment(treatment)}
+                    className="shrink-0 p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                    title="Edit treatment"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -549,7 +579,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
       </Modal>
 
       {/* Treatment Modal */}
-      <Modal isOpen={showTreatmentModal} onClose={() => setShowTreatmentModal(false)} title="Add Treatment">
+      <Modal isOpen={showTreatmentModal} onClose={() => { setShowTreatmentModal(false); resetTreatmentForm(); }} title={editingTreatmentId ? 'Edit Treatment' : 'Add Treatment'}>
         <form onSubmit={handleTreatmentSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Type *</label>
@@ -596,7 +626,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
             <input type="number" step="0.01" value={treatmentForm.cost} onChange={(e) => setTreatmentForm({ ...treatmentForm, cost: e.target.value })} className={inputClasses} placeholder="0.00" />
           </div>
           <button type="submit" disabled={submitting} className="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 font-medium text-sm disabled:opacity-50 transition-colors">
-            {submitting ? 'Saving...' : 'Save Treatment'}
+            {submitting ? 'Saving...' : editingTreatmentId ? 'Update Treatment' : 'Save Treatment'}
           </button>
         </form>
       </Modal>
