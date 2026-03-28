@@ -76,6 +76,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
   const [maleGoats, setMaleGoats] = useState<any[]>([]);
 
   const [showWeightModal, setShowWeightModal] = useState(false);
+  const [editingWeightId, setEditingWeightId] = useState<string | null>(null);
   const [showTreatmentModal, setShowTreatmentModal] = useState(false);
   const [editingTreatmentId, setEditingTreatmentId] = useState<string | null>(null);
   const [showProductionModal, setShowProductionModal] = useState(false);
@@ -140,24 +141,40 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const openEditWeight = (record: any) => {
+    setEditingWeightId(record.id);
+    setWeightForm({
+      weight: record.weight ? String(Number(record.weight)) : '',
+      recordedAt: record.recordedAt ? new Date(record.recordedAt).toISOString().split('T')[0] : '',
+      notes: record.notes || '',
+    });
+    setShowWeightModal(true);
+  };
+
+  const resetWeightForm = () => {
+    setEditingWeightId(null);
+    setWeightForm({ weight: '', recordedAt: '', notes: '' });
+  };
+
   const handleWeightSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const isEditing = !!editingWeightId;
       const response = await fetch(`/api/animals/${id}/weights`, {
-        method: 'POST',
+        method: isEditing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(weightForm),
+        body: JSON.stringify(isEditing ? { ...weightForm, weightId: editingWeightId } : weightForm),
       });
       if (response.ok) {
         setShowWeightModal(false);
-        setWeightForm({ weight: '', recordedAt: '', notes: '' });
+        resetWeightForm();
         refreshData();
       } else {
         const err = await response.json();
-        alert(err.error || 'Failed to add weight record');
+        alert(err.error || `Failed to ${isEditing ? 'update' : 'add'} weight record`);
       }
-    } catch { alert('Failed to add weight record'); }
+    } catch { alert(`Failed to ${editingWeightId ? 'update' : 'add'} weight record`); }
     finally { setSubmitting(false); }
   };
 
@@ -364,7 +381,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <button onClick={() => setShowWeightModal(true)} className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-200 transition-all active:scale-[0.97] group">
+        <button onClick={() => { resetWeightForm(); setShowWeightModal(true); }} className="flex items-center gap-3 p-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-blue-50 dark:hover:bg-blue-900/10 hover:border-blue-200 transition-all active:scale-[0.97] group">
           <div className="w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0"><Scale className="w-4 h-4 text-blue-600 dark:text-blue-400" /></div>
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-700 text-left">Record Weight</span>
         </button>
@@ -446,7 +463,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
         <SectionCard
           title="Weight History"
           icon={<Scale className="w-4 h-4 text-blue-500" />}
-          action={<button onClick={() => setShowWeightModal(true)} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
+          action={<button onClick={() => { resetWeightForm(); setShowWeightModal(true); }} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
         >
           {goat.weightRecords?.length > 0 ? (
             <div className="space-y-2">
@@ -456,7 +473,16 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
                     <Scale className="w-3.5 h-3.5 text-blue-400" />
                     <span className="text-sm font-semibold text-gray-900 dark:text-white">{Number(record.weight)} kg</span>
                   </div>
-                  <span className="text-xs text-gray-400">{formatDateShort(record.recordedAt)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400">{formatDateShort(record.recordedAt)}</span>
+                    <button
+                      onClick={() => openEditWeight(record)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                      title="Edit weight"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -558,7 +584,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
       </div>
 
       {/* Weight Modal */}
-      <Modal isOpen={showWeightModal} onClose={() => setShowWeightModal(false)} title="Record Weight">
+      <Modal isOpen={showWeightModal} onClose={() => { setShowWeightModal(false); resetWeightForm(); }} title={editingWeightId ? 'Edit Weight' : 'Record Weight'}>
         <form onSubmit={handleWeightSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Weight (kg) *</label>
@@ -573,7 +599,7 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
             <input type="text" value={weightForm.notes} onChange={(e) => setWeightForm({ ...weightForm, notes: e.target.value })} className={inputClasses} placeholder="Optional notes" />
           </div>
           <button type="submit" disabled={submitting} className="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 font-medium text-sm disabled:opacity-50 transition-colors">
-            {submitting ? 'Saving...' : 'Save Weight'}
+            {submitting ? 'Saving...' : editingWeightId ? 'Update Weight' : 'Save Weight'}
           </button>
         </form>
       </Modal>
