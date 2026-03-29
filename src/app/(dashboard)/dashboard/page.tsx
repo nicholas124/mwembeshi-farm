@@ -291,23 +291,21 @@ export default async function DashboardPage() {
 
       {/* Primary Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Link href="/dashboard/livestock" className="group">
+        <Link href="/dashboard/goats" className="group">
           <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 transition-all group-hover:shadow-md group-hover:-translate-y-0.5 group-hover:border-green-300 dark:group-hover:border-green-700">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center">
                 <Beef className="w-5 h-5 text-green-600 dark:text-green-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{stats.livestock.total}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{stats.goats.total}</p>
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Total Livestock</p>
-              {stats.livestock.recentBirths > 0 && (
-                <span className="text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
-                  +{stats.livestock.recentBirths} new
-                </span>
-              )}
+              <p className="text-xs text-gray-500 dark:text-gray-400">Goats</p>
+              <span className="text-[10px] font-semibold text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-1.5 py-0.5 rounded-full">
+                {stats.goats.does} does / {stats.goats.bucks} bucks
+              </span>
             </div>
           </div>
         </Link>
@@ -436,8 +434,8 @@ export default async function DashboardPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 dark:border-gray-700/50">
             <h2 className="font-semibold text-gray-900 dark:text-white text-sm">Livestock Overview</h2>
-            <Link href="/dashboard/livestock" className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 font-medium">
-              View all <ArrowRight className="w-3 h-3" />
+            <Link href="/dashboard/goats" className="text-xs text-green-600 dark:text-green-400 hover:underline flex items-center gap-1 font-medium">
+              View goats <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
           <div className="p-4 space-y-1">
@@ -445,7 +443,7 @@ export default async function DashboardPage() {
               <div className="text-center py-6">
                 <Beef className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">No livestock recorded yet</p>
-                <Link href="/dashboard/livestock/new" className="text-xs text-green-600 dark:text-green-400 hover:underline mt-1 inline-block">Add your first animal</Link>
+                <Link href="/dashboard/goats/new" className="text-xs text-green-600 dark:text-green-400 hover:underline mt-1 inline-block">Add your first goat</Link>
               </div>
             ) : (
               Object.entries(stats.livestock.byType).map(([type, count]: [string, any]) => {

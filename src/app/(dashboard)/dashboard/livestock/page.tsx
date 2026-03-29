@@ -80,7 +80,7 @@ export default function LivestockPage() {
         const response = await fetch('/api/animals');
         const data = await response.json();
         if (data.success) {
-          setAnimals(data.data);
+          setAnimals(data.data.filter((a: any) => a.type !== 'GOAT'));
         }
       } catch (error) {
         console.error('Failed to fetch animals:', error);
@@ -146,7 +146,7 @@ export default function LivestockPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Livestock</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Other Livestock</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Loading your animals...</p>
           </div>
         </div>
@@ -162,10 +162,10 @@ export default function LivestockPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
             <Beef className="w-7 h-7 text-green-600" />
-            Livestock
+            Other Livestock
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            {totalActive} active of {totalAnimals} total animals
+            {totalActive} active of {totalAnimals} total — Cattle, sheep, poultry & more
           </p>
         </div>
         <Link
@@ -178,9 +178,19 @@ export default function LivestockPage() {
         </Link>
       </div>
 
+      {/* Goats Banner */}
+      <Link href="/dashboard/goats" className="flex items-center gap-3 p-3.5 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/40 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors group">
+        <span className="text-2xl">🐐</span>
+        <div className="flex-1">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Looking for goats?</p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">Go to Goat Management for the full goat herd experience</p>
+        </div>
+        <ChevronRight className="w-4 h-4 text-amber-400 group-hover:text-amber-600 transition-colors" />
+      </Link>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {['GOAT', 'COW', 'SHEEP', 'CHICKEN'].map((type) => {
+        {['COW', 'SHEEP', 'CHICKEN', 'PIG'].map((type) => {
           const typeAnimals = animals.filter((a) => a.type === type);
           const activeCount = typeAnimals.filter(a => a.status === 'ACTIVE').length;
           const isSelected = selectedType === type;

@@ -187,7 +187,13 @@ export default function AnimalDetailPage({
         }
         const result = await response.json();
         const data = result.data || result;
-        
+
+        // Redirect goats to the goat detail page
+        if (data.type === 'GOAT') {
+          router.replace(`/dashboard/goats/${id}`);
+          return;
+        }
+
         // Transform the data to match UI expectations
         const transformed = {
           ...data,
@@ -741,14 +747,6 @@ export default function AnimalDetailPage({
             )}
           </div>
           
-          {animal.productions && animal.productions.length > 6 && (
-            <Link 
-              href={`/dashboard/livestock/${id}/production`}
-              className="mt-4 text-xs text-green-600 hover:text-green-700 dark:text-green-400 font-medium flex items-center justify-center gap-1"
-            >
-              View all production records <ChevronRight className="w-3.5 h-3.5" />
-            </Link>
-          )}
         </SectionCard>
       )}
 

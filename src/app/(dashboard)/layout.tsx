@@ -38,20 +38,18 @@ type NavItem = {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { 
-    name: 'Livestock', href: '/dashboard/livestock', icon: Beef,
+  {
+    name: 'Goats', href: '/dashboard/goats', icon: Beef,
     children: [
-      { name: 'All Livestock', href: '/dashboard/livestock' },
-      { name: 'Goats', href: '/dashboard/goats', children: [
-        { name: 'All Goats', href: '/dashboard/goats' },
-        { name: 'Inventory', href: '/dashboard/goats/inventory' },
-        { name: 'Daily Tracker', href: '/dashboard/goats/daily-tracker' },
-        { name: 'Breeding', href: '/dashboard/goats/breeding' },
-        { name: 'Health', href: '/dashboard/goats/health' },
-      ]},
+      { name: 'All Goats', href: '/dashboard/goats' },
+      { name: 'Daily Tracker', href: '/dashboard/goats/daily-tracker' },
+      { name: 'Breeding', href: '/dashboard/goats/breeding' },
+      { name: 'Health', href: '/dashboard/goats/health' },
+      { name: 'Inventory', href: '/dashboard/goats/inventory' },
     ]
   },
-  { 
+  { name: 'Other Livestock', href: '/dashboard/livestock', icon: Beef },
+  {
     name: 'Crops', href: '/dashboard/crops', icon: Sprout,
     children: [
       { name: 'All Crops', href: '/dashboard/crops' },
@@ -68,7 +66,7 @@ const navigation: NavItem[] = [
 // Bottom nav shows first 4 items + "More" for mobile
 const bottomNavItems = [
   { name: 'Home', href: '/dashboard', icon: Home },
-  { name: 'Livestock', href: '/dashboard/livestock', icon: Beef },
+  { name: 'Goats', href: '/dashboard/goats', icon: Beef },
   { name: 'Crops', href: '/dashboard/crops', icon: Sprout },
   { name: 'Tasks', href: '/dashboard/tasks', icon: ClipboardList },
 ];
