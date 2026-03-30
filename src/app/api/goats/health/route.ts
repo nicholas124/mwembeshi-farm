@@ -91,3 +91,49 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// POST /api/goats/health - Bulk treatment for multiple goats
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { animalIds, type, description, medication, dosage, cost, treatmentDate, nextDueDate, veterinarian, notes } = body;
+
+    if (!animalIds || animalIds.length === 0) {
+      return NextResponse.json({ success: false, error: 'Select at least one goat' }, { status: 400 });
+    }
+    if (!type || !description) {
+      return NextResponse.json({ success: false, error: 'Type and description are required' }, { status: 400 });
+    }
+
+    const treatments = await prisma.$transaction(
+      animalIds.map((animalId: string) =>
+        prisma.treatment.create({
+          data: {
+            animalId,
+            type,
+            description,
+            medication: medication || null,
+            dosage: dosage || null,
+            cost: cost ? parseFloat(cost) : null,
+            treatmentDate: treatmentDate ? new Date(treatmentDate) : new Date(),
+            nextDueDate: nextDueDate ? new Date(nextDueDate) : null,
+            veterinarian: veterinarian || null,
+            notes: notes || null,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json({
+      success: true,
+      count: treatments.length,
+      message: `Treatment applied to ${treatments.length} goats`,
+    }, { status: 201 });
+  } catch (error) {
+    console.error('Error creating bulk treatments:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to create bulk treatments' },
+      { status: 500 }
+    );
+  }
+}

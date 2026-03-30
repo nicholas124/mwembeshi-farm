@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Activity, AlertTriangle, Clock, Shield, Search, X } from 'lucide-react';
+import { ArrowLeft, Activity, AlertTriangle, Clock, Shield, Search, X, Plus, Check, CheckCheck } from 'lucide-react';
 
 interface Treatment {
   id: string;
@@ -29,6 +29,14 @@ interface UntreatedGoat {
   dateOfBirth: string | null;
 }
 
+interface ActiveGoat {
+  id: string;
+  tag: string;
+  name: string | null;
+  breed: string | null;
+  gender: string;
+}
+
 export default function GoatHealthPage() {
   const [recentTreatments, setRecentTreatments] = useState<Treatment[]>([]);
   const [overdueTreatments, setOverdueTreatments] = useState<Treatment[]>([]);
@@ -38,6 +46,17 @@ export default function GoatHealthPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overdue' | 'upcoming' | 'recent' | 'untreated'>('overdue');
   const [search, setSearch] = useState('');
+
+  // Bulk treatment state
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [allGoats, setAllGoats] = useState<ActiveGoat[]>([]);
+  const [selectedGoatIds, setSelectedGoatIds] = useState<Set<string>>(new Set());
+  const [bulkForm, setBulkForm] = useState({
+    type: 'VACCINATION', description: '', medication: '', dosage: '',
+    cost: '', treatmentDate: '', nextDueDate: '', veterinarian: '', notes: '',
+  });
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
+  const [bulkGoatSearch, setBulkGoatSearch] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -57,6 +76,85 @@ export default function GoatHealthPage() {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Fetch active goats for bulk modal
+  const fetchGoats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/goats?status=ACTIVE&pageSize=200');
+      const data = await res.json();
+      if (data.success) {
+        setAllGoats((data.data || []).map((g: any) => ({
+          id: g.id, tag: g.tag, name: g.name, breed: g.breed, gender: g.gender,
+        })));
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const openBulkModal = () => {
+    fetchGoats();
+    setBulkForm({
+      type: 'VACCINATION', description: '', medication: '', dosage: '',
+      cost: '', treatmentDate: '', nextDueDate: '', veterinarian: '', notes: '',
+    });
+    setSelectedGoatIds(new Set());
+    setBulkGoatSearch('');
+    setShowBulkModal(true);
+  };
+
+  const toggleGoat = (id: string) => {
+    setSelectedGoatIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    const filtered = filteredGoats;
+    const allSelected = filtered.every(g => selectedGoatIds.has(g.id));
+    if (allSelected) {
+      setSelectedGoatIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(g => next.delete(g.id));
+        return next;
+      });
+    } else {
+      setSelectedGoatIds(prev => {
+        const next = new Set(prev);
+        filtered.forEach(g => next.add(g.id));
+        return next;
+      });
+    }
+  };
+
+  const filteredGoats = allGoats.filter(g => {
+    if (!bulkGoatSearch) return true;
+    const q = bulkGoatSearch.toLowerCase();
+    return g.tag.toLowerCase().includes(q) || g.name?.toLowerCase().includes(q) || g.breed?.toLowerCase().includes(q);
+  });
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (selectedGoatIds.size === 0) { alert('Select at least one goat'); return; }
+    setBulkSubmitting(true);
+    try {
+      const res = await fetch('/api/goats/health', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...bulkForm, animalIds: Array.from(selectedGoatIds) }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        alert(`Treatment applied to ${result.count} goats`);
+        setShowBulkModal(false);
+        fetchData();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to apply bulk treatment');
+      }
+    } catch { alert('Failed to apply bulk treatment'); }
+    finally { setBulkSubmitting(false); }
+  };
 
   const treatmentTypeIcon = (type: string) => {
     switch (type) {
@@ -106,16 +204,26 @@ export default function GoatHealthPage() {
   return (
     <div className="space-y-5 pb-8">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard/goats" className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Activity className="w-6 h-6 text-green-500" /> Herd Health
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Health overview & treatment schedule</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link href="/dashboard/goats" className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Activity className="w-6 h-6 text-green-500" /> Herd Health
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Health overview & treatment schedule</p>
+          </div>
         </div>
+        <button
+          onClick={openBulkModal}
+          className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition-all active:scale-95 shadow-sm font-medium text-sm"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Bulk Treatment</span>
+          <span className="sm:hidden">Bulk</span>
+        </button>
       </div>
 
       {/* Treatment Stats */}
@@ -272,6 +380,194 @@ export default function GoatHealthPage() {
           })()
         )}
       </div>
+
+      {/* Bulk Treatment Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-lg shadow-xl max-h-[95vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bulk Treatment</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Apply a treatment to multiple goats at once</p>
+              </div>
+              <button onClick={() => setShowBulkModal(false)} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleBulkSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
+              {/* Goat Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Select Goats * <span className="text-green-600 font-normal">({selectedGoatIds.size} selected)</span>
+                  </label>
+                  <button type="button" onClick={toggleAll} className="text-xs text-green-600 dark:text-green-400 hover:text-green-700 font-medium flex items-center gap-1">
+                    <CheckCheck className="w-3.5 h-3.5" />
+                    {filteredGoats.length > 0 && filteredGoats.every(g => selectedGoatIds.has(g.id)) ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search goats..."
+                    value={bulkGoatSearch}
+                    onChange={e => setBulkGoatSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div className="max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-700/50">
+                  {filteredGoats.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-4">No goats found</p>
+                  ) : (
+                    filteredGoats.map(goat => (
+                      <label key={goat.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={selectedGoatIds.has(goat.id)}
+                          onChange={() => toggleGoat(goat.id)}
+                          className="w-4 h-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-sm font-medium text-gray-900 dark:text-white">{goat.tag}</span>
+                          {goat.name && <span className="text-xs text-gray-500 dark:text-gray-400 ml-1.5">({goat.name})</span>}
+                        </div>
+                        <span className={`text-xs ${goat.gender === 'FEMALE' ? 'text-pink-500' : 'text-blue-500'}`}>
+                          {goat.gender === 'FEMALE' ? '♀' : '♂'}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Treatment Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Treatment Type *</label>
+                <select
+                  value={bulkForm.type}
+                  onChange={e => setBulkForm(f => ({ ...f, type: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="VACCINATION">Vaccination</option>
+                  <option value="DEWORMING">Deworming</option>
+                  <option value="MEDICATION">Medication</option>
+                  <option value="CHECKUP">Checkup</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description *</label>
+                <input
+                  type="text"
+                  required
+                  value={bulkForm.description}
+                  onChange={e => setBulkForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g. Raksha HS+BQ vaccine"
+                />
+              </div>
+
+              {/* Medication & Dosage */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Medication</label>
+                  <input
+                    type="text"
+                    value={bulkForm.medication}
+                    onChange={e => setBulkForm(f => ({ ...f, medication: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Drug name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Dosage</label>
+                  <input
+                    type="text"
+                    value={bulkForm.dosage}
+                    onChange={e => setBulkForm(f => ({ ...f, dosage: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="e.g. 3ml"
+                  />
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Treatment Date</label>
+                  <input
+                    type="date"
+                    value={bulkForm.treatmentDate}
+                    onChange={e => setBulkForm(f => ({ ...f, treatmentDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Next Due Date</label>
+                  <input
+                    type="date"
+                    value={bulkForm.nextDueDate}
+                    onChange={e => setBulkForm(f => ({ ...f, nextDueDate: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                </div>
+              </div>
+
+              {/* Vet & Cost */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Veterinarian</label>
+                  <input
+                    type="text"
+                    value={bulkForm.veterinarian}
+                    onChange={e => setBulkForm(f => ({ ...f, veterinarian: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Vet name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Cost (ZMW)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={bulkForm.cost}
+                    onChange={e => setBulkForm(f => ({ ...f, cost: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Total cost"
+                  />
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Notes</label>
+                <input
+                  type="text"
+                  value={bulkForm.notes}
+                  onChange={e => setBulkForm(f => ({ ...f, notes: e.target.value }))}
+                  className="w-full px-3 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Optional notes"
+                />
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={bulkSubmitting || selectedGoatIds.size === 0}
+                className="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 font-medium text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <Check className="w-4 h-4" />
+                {bulkSubmitting ? 'Applying...' : `Apply to ${selectedGoatIds.size} Goat${selectedGoatIds.size !== 1 ? 's' : ''}`}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
