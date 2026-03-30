@@ -53,6 +53,34 @@ export async function GET(
   }
 }
 
+// DELETE /api/animals/[id]/treatments - Delete a treatment record
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const treatmentId = searchParams.get('treatmentId');
+
+    if (!treatmentId) {
+      return NextResponse.json({ success: false, error: 'Treatment ID is required' }, { status: 400 });
+    }
+
+    const existing = await prisma.treatment.findFirst({ where: { id: treatmentId, animalId: id } });
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Treatment not found' }, { status: 404 });
+    }
+
+    await prisma.treatment.delete({ where: { id: treatmentId } });
+
+    return NextResponse.json({ success: true, message: 'Treatment deleted' });
+  } catch (error: any) {
+    console.error('Error deleting treatment:', error);
+    return NextResponse.json({ success: false, error: 'Failed to delete treatment' }, { status: 500 });
+  }
+}
+
 // PUT /api/animals/[id]/treatments - Update an existing treatment record
 export async function PUT(
   request: NextRequest,

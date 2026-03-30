@@ -92,6 +92,37 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// DELETE /api/goats/health - Bulk delete treatments
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { treatmentIds } = body;
+
+    if (!treatmentIds || treatmentIds.length === 0) {
+      return NextResponse.json({ success: false, error: 'No treatments selected' }, { status: 400 });
+    }
+
+    const result = await prisma.treatment.deleteMany({
+      where: {
+        id: { in: treatmentIds },
+        animal: { type: 'GOAT' },
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      count: result.count,
+      message: `Deleted ${result.count} treatment records`,
+    });
+  } catch (error) {
+    console.error('Error bulk deleting treatments:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete treatments' },
+      { status: 500 }
+    );
+  }
+}
+
 // POST /api/goats/health - Bulk treatment for multiple goats
 export async function POST(request: NextRequest) {
   try {

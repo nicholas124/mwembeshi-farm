@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, Activity, AlertTriangle, Clock, Shield, Search, X, Plus, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Activity, AlertTriangle, Clock, Shield, Search, X, Plus, Check, CheckCheck, Trash2 } from 'lucide-react';
 
 interface Treatment {
   id: string;
@@ -57,6 +57,9 @@ export default function GoatHealthPage() {
   });
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkGoatSearch, setBulkGoatSearch] = useState('');
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedTreatmentIds, setSelectedTreatmentIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -156,6 +159,37 @@ export default function GoatHealthPage() {
     finally { setBulkSubmitting(false); }
   };
 
+  const toggleTreatment = (id: string) => {
+    setSelectedTreatmentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedTreatmentIds.size === 0) return;
+    if (!confirm(`Delete ${selectedTreatmentIds.size} treatment record${selectedTreatmentIds.size !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+    setBulkDeleting(true);
+    try {
+      const res = await fetch('/api/goats/health', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ treatmentIds: Array.from(selectedTreatmentIds) }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        alert(`Deleted ${result.count} treatment records`);
+        setSelectedTreatmentIds(new Set());
+        setSelectMode(false);
+        fetchData();
+      } else {
+        alert('Failed to delete treatments');
+      }
+    } catch { alert('Failed to delete treatments'); }
+    finally { setBulkDeleting(false); }
+  };
+
   const treatmentTypeIcon = (type: string) => {
     switch (type) {
       case 'VACCINATION': return '💉';
@@ -216,14 +250,45 @@ export default function GoatHealthPage() {
             <p className="text-gray-500 dark:text-gray-400 text-sm">Health overview & treatment schedule</p>
           </div>
         </div>
-        <button
-          onClick={openBulkModal}
-          className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition-all active:scale-95 shadow-sm font-medium text-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Bulk Treatment</span>
-          <span className="sm:hidden">Bulk</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {selectMode ? (
+            <>
+              <button
+                onClick={handleBulkDelete}
+                disabled={selectedTreatmentIds.size === 0 || bulkDeleting}
+                className="inline-flex items-center gap-1.5 bg-red-600 text-white px-3 py-2.5 rounded-xl hover:bg-red-700 transition-all active:scale-95 shadow-sm font-medium text-sm disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Delete ({selectedTreatmentIds.size})</span>
+                <span className="sm:hidden">{selectedTreatmentIds.size}</span>
+              </button>
+              <button
+                onClick={() => { setSelectMode(false); setSelectedTreatmentIds(new Set()); }}
+                className="inline-flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium text-sm"
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setSelectMode(true)}
+                className="inline-flex items-center gap-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-2.5 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-medium text-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Select</span>
+              </button>
+              <button
+                onClick={openBulkModal}
+                className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2.5 rounded-xl hover:bg-green-700 transition-all active:scale-95 shadow-sm font-medium text-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Bulk Treatment</span>
+                <span className="sm:hidden">Bulk</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Treatment Stats */}
@@ -340,9 +405,22 @@ export default function GoatHealthPage() {
                 ? Math.ceil((new Date(treatment.nextDueDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
                 : null;
 
+              const Wrapper = selectMode ? 'div' : Link;
+              const wrapperProps = selectMode
+                ? { onClick: () => toggleTreatment(treatment.id), className: `block bg-white dark:bg-gray-800 rounded-xl border-2 p-4 cursor-pointer transition-colors ${selectedTreatmentIds.has(treatment.id) ? 'border-red-400 dark:border-red-500 bg-red-50/50 dark:bg-red-900/10' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'}` }
+                : { href: `/dashboard/goats/${treatment.animal.id}`, className: 'block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:border-green-300 dark:hover:border-green-700 transition-colors' };
+
               return (
-                <Link key={treatment.id} href={`/dashboard/goats/${treatment.animal.id}`} className="block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:border-green-300 dark:hover:border-green-700 transition-colors">
+                <Wrapper key={treatment.id} {...(wrapperProps as any)}>
                   <div className="flex items-start gap-3">
+                    {selectMode && (
+                      <input
+                        type="checkbox"
+                        checked={selectedTreatmentIds.has(treatment.id)}
+                        readOnly
+                        className="mt-1.5 w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                      />
+                    )}
                     <div className="text-xl mt-0.5">{treatmentTypeIcon(treatment.type)}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
@@ -374,7 +452,7 @@ export default function GoatHealthPage() {
                       </div>
                     )}
                   </div>
-                </Link>
+                </Wrapper>
               );
             });
           })()

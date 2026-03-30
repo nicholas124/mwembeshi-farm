@@ -178,6 +178,18 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
     finally { setSubmitting(false); }
   };
 
+  const handleDeleteTreatment = async (treatmentId: string) => {
+    if (!confirm('Delete this treatment record?')) return;
+    try {
+      const response = await fetch(`/api/animals/${id}/treatments?treatmentId=${treatmentId}`, { method: 'DELETE' });
+      if (response.ok) {
+        refreshData();
+      } else {
+        alert('Failed to delete treatment');
+      }
+    } catch { alert('Failed to delete treatment'); }
+  };
+
   const openEditTreatment = (treatment: any) => {
     setEditingTreatmentId(treatment.id);
     setTreatmentForm({
@@ -465,9 +477,9 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
           icon={<Scale className="w-4 h-4 text-blue-500" />}
           action={<button onClick={() => { resetWeightForm(); setShowWeightModal(true); }} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
         >
-          {goat.weightRecords?.length > 0 ? (
+          {goat.weights?.length > 0 ? (
             <div className="space-y-2">
-              {goat.weightRecords.slice(0, 10).map((record: any) => (
+              {goat.weights.slice(0, 10).map((record: any) => (
                 <div key={record.id} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700/30 last:border-0">
                   <div className="flex items-center gap-2">
                     <Scale className="w-3.5 h-3.5 text-blue-400" />
@@ -513,13 +525,22 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
                       <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">📅 Next due: {formatDateShort(treatment.nextDueDate)}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => openEditTreatment(treatment)}
-                    className="shrink-0 p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
-                    title="Edit treatment"
-                  >
-                    <Edit className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    <button
+                      onClick={() => openEditTreatment(treatment)}
+                      className="p-1.5 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                      title="Edit treatment"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTreatment(treatment.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      title="Delete treatment"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -535,9 +556,9 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
             icon={<Heart className="w-4 h-4 text-pink-500" />}
             action={<button onClick={() => setShowBreedingModal(true)} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
           >
-            {goat.breedingRecords?.length > 0 ? (
+            {goat.breeding?.length > 0 ? (
               <div className="space-y-3">
-                {goat.breedingRecords.map((record: any) => (
+                {goat.breeding.map((record: any) => (
                   <div key={record.id} className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${breedingStatusColors[record.status]}`}>{record.status}</span>
@@ -564,9 +585,9 @@ export default function GoatDetailPage({ params }: { params: { id: string } }) {
           icon={<Milk className="w-4 h-4 text-cyan-500" />}
           action={<button onClick={() => setShowProductionModal(true)} className="text-xs text-green-600 hover:text-green-700 font-medium flex items-center gap-1"><Plus className="w-3.5 h-3.5" />Add</button>}
         >
-          {goat.productionRecords?.length > 0 ? (
+          {goat.productions?.length > 0 ? (
             <div className="space-y-2">
-              {goat.productionRecords.map((record: any) => (
+              {goat.productions.map((record: any) => (
                 <div key={record.id} className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700/30 last:border-0">
                   <div className="flex items-center gap-2">
                     <Milk className="w-3.5 h-3.5 text-cyan-400" />

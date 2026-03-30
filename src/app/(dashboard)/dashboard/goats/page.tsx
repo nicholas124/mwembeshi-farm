@@ -427,7 +427,7 @@ export default function GoatsPage() {
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-1.5">
-                      {goat.breedingRecords?.length > 0 && (
+                      {goat.breeding?.some((r: any) => r.status === 'PREGNANT' && !r.actualBirthDate) && (
                         <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
                           Pregnant
                         </span>
@@ -503,7 +503,7 @@ export default function GoatsPage() {
                     {isKid(goat.dateOfBirth) && (
                       <span className="font-medium text-orange-600 dark:text-orange-400">Kid</span>
                     )}
-                    {goat.breedingRecords?.length > 0 && (
+                    {goat.breeding?.some((r: any) => r.status === 'PREGNANT' && !r.actualBirthDate) && (
                       <span className="font-medium text-purple-600 dark:text-purple-400">Pregnant</span>
                     )}
                   </div>
