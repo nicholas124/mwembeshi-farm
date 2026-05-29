@@ -19,18 +19,15 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: "600",
         },
-        headerStyle: { backgroundColor: "#16a34a" },
-        headerTintColor: "white",
-        headerTitleStyle: { fontWeight: "bold" },
+        headerShown: false,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: "Herd",
-          headerTitle: "My Goats",
+          title: "Home",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="paw" size={size} color={color} />
+            <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
@@ -38,7 +35,11 @@ export default function TabLayout() {
         name="health"
         options={{
           title: "Health",
+          headerShown: true,
           headerTitle: "Health & Treatments",
+          headerStyle: { backgroundColor: "#16a34a" },
+          headerTintColor: "white",
+          headerTitleStyle: { fontWeight: "bold" },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="medkit" size={size} color={color} />
           ),
@@ -48,7 +49,11 @@ export default function TabLayout() {
         name="breeding"
         options={{
           title: "Breeding",
+          headerShown: true,
           headerTitle: "Breeding Program",
+          headerStyle: { backgroundColor: "#16a34a" },
+          headerTintColor: "white",
+          headerTitleStyle: { fontWeight: "bold" },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="heart" size={size} color={color} />
           ),
@@ -58,7 +63,11 @@ export default function TabLayout() {
         name="tracker"
         options={{
           title: "Daily Log",
+          headerShown: true,
           headerTitle: "Daily Tracker",
+          headerStyle: { backgroundColor: "#16a34a" },
+          headerTintColor: "white",
+          headerTitleStyle: { fontWeight: "bold" },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar" size={size} color={color} />
           ),
@@ -68,7 +77,11 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: "Profile",
+          headerShown: true,
           headerTitle: "My Profile",
+          headerStyle: { backgroundColor: "#16a34a" },
+          headerTintColor: "white",
+          headerTitleStyle: { fontWeight: "bold" },
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />
           ),

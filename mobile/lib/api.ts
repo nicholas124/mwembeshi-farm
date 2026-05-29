@@ -1,6 +1,5 @@
 import * as SecureStore from "expo-secure-store";
 
-// Change this to your Vercel deployment URL
 const BASE_URL = "https://mwembeshi-farm.vercel.app";
 
 let authToken: string | null = null;
@@ -21,23 +20,15 @@ export async function clearToken() {
   await SecureStore.deleteItemAsync("auth_token");
 }
 
-async function request<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = await getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(options.headers as Record<string, string>),
   };
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
 
   if (!res.ok) {
     const error = await res.json().catch(() => ({ message: res.statusText }));
@@ -47,7 +38,8 @@ async function request<T>(
   return res.json();
 }
 
-// Auth
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
 export async function login(email: string, password: string) {
   const data = await request<{ token: string; user: any }>("/api/auth/mobile-login", {
     method: "POST",
@@ -57,7 +49,8 @@ export async function login(email: string, password: string) {
   return data;
 }
 
-// Goats
+// ─── Goats ───────────────────────────────────────────────────────────────────
+
 export async function getGoats(params?: Record<string, string>) {
   const query = params ? "?" + new URLSearchParams(params).toString() : "";
   return request<any>(`/api/goats${query}`);
@@ -68,69 +61,139 @@ export async function getGoat(id: string) {
 }
 
 export async function createGoat(data: any) {
-  return request<any>("/api/goats", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return request<any>("/api/goats", { method: "POST", body: JSON.stringify(data) });
 }
 
 export async function updateGoat(id: string, data: any) {
-  return request<any>(`/api/goats/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+  return request<any>(`/api/goats/${id}`, { method: "PUT", body: JSON.stringify(data) });
 }
 
 export async function deleteGoat(id: string) {
   return request<any>(`/api/goats/${id}`, { method: "DELETE" });
 }
 
-// Health / Treatments
+// ─── Health / Treatments ─────────────────────────────────────────────────────
+
 export async function getHealth() {
   return request<any>("/api/goats/health");
 }
 
 export async function createTreatment(data: any) {
-  return request<any>("/api/goats/health", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return request<any>("/api/goats/health", { method: "POST", body: JSON.stringify(data) });
 }
 
 export async function deleteTreatments(ids: string[]) {
-  return request<any>("/api/goats/health", {
-    method: "DELETE",
-    body: JSON.stringify({ ids }),
-  });
+  return request<any>("/api/goats/health", { method: "DELETE", body: JSON.stringify({ ids }) });
 }
 
-// Breeding
+// ─── Breeding ────────────────────────────────────────────────────────────────
+
 export async function getBreeding() {
   return request<any>("/api/goats/breeding");
 }
 
 export async function createBreeding(data: any) {
-  return request<any>("/api/goats/breeding", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  return request<any>("/api/goats/breeding", { method: "POST", body: JSON.stringify(data) });
 }
 
 export async function updateBreeding(id: string, data: any) {
-  return request<any>(`/api/goats/breeding/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
+  return request<any>(`/api/goats/breeding/${id}`, { method: "PUT", body: JSON.stringify(data) });
 }
 
-// Daily Logs
+// ─── Daily Logs ──────────────────────────────────────────────────────────────
+
 export async function getDailyLogs(params?: Record<string, string>) {
   const query = params ? "?" + new URLSearchParams(params).toString() : "";
   return request<any>(`/api/goats/daily-logs${query}`);
 }
 
 export async function createDailyLog(data: any) {
-  return request<any>("/api/goats/daily-logs", {
+  return request<any>("/api/goats/daily-logs", { method: "POST", body: JSON.stringify(data) });
+}
+
+// ─── Pens ─────────────────────────────────────────────────────────────────────
+
+export async function getPens() {
+  return request<any>("/api/goats/pens");
+}
+
+export async function getPen(id: string) {
+  return request<any>(`/api/goats/pens/${id}`);
+}
+
+export async function createPen(data: any) {
+  return request<any>("/api/goats/pens", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updatePen(id: string, data: any) {
+  return request<any>(`/api/goats/pens/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function assignGoatsToPen(penId: string, animalIds: string[], reason?: string) {
+  return request<any>(`/api/goats/pens/${penId}/assign`, {
+    method: "POST",
+    body: JSON.stringify({ animalIds, reason }),
+  });
+}
+
+export async function removeGoatsFromPen(penId: string, animalIds: string[]) {
+  return request<any>(`/api/goats/pens/${penId}/assign`, {
+    method: "DELETE",
+    body: JSON.stringify({ animalIds }),
+  });
+}
+
+// ─── Kidding ──────────────────────────────────────────────────────────────────
+
+export async function getKiddingRecords(animalId?: string) {
+  const query = animalId ? `?animalId=${animalId}` : "";
+  return request<any>(`/api/goats/kidding${query}`);
+}
+
+export async function createKiddingRecord(data: any) {
+  return request<any>("/api/goats/kidding", { method: "POST", body: JSON.stringify(data) });
+}
+
+// ─── Feed ─────────────────────────────────────────────────────────────────────
+
+export async function getFeedRecords(params?: Record<string, string>) {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/goats/feed${query}`);
+}
+
+export async function createFeedRecord(data: any) {
+  return request<any>("/api/goats/feed", { method: "POST", body: JSON.stringify(data) });
+}
+
+// ─── Sales ────────────────────────────────────────────────────────────────────
+
+export async function getSales(animalId?: string) {
+  const query = animalId ? `?animalId=${animalId}` : "";
+  return request<any>(`/api/goats/sales${query}`);
+}
+
+export async function createSale(data: any) {
+  return request<any>("/api/goats/sales", { method: "POST", body: JSON.stringify(data) });
+}
+
+// ─── Mortality ───────────────────────────────────────────────────────────────
+
+export async function getMortality() {
+  return request<any>("/api/goats/mortality");
+}
+
+export async function createMortality(data: any) {
+  return request<any>("/api/goats/mortality", { method: "POST", body: JSON.stringify(data) });
+}
+
+// ─── Assessments (BCS + FAMACHA) ─────────────────────────────────────────────
+
+export async function getAssessments(animalId: string) {
+  return request<any>(`/api/goats/${animalId}/assessments`);
+}
+
+export async function createAssessment(animalId: string, data: any) {
+  return request<any>(`/api/goats/${animalId}/assessments`, {
     method: "POST",
     body: JSON.stringify(data),
   });

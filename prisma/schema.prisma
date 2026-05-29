@@ -84,12 +84,23 @@ model Animal {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  // Pen tracking
+  kiddingRecordId String?       // Which kidding event produced this animal (as a kid)
+  bornInKidding   KiddingRecord? @relation("KidsFromKidding", fields: [kiddingRecordId], references: [id])
+
   // Relations
-  treatments    Treatment[]
-  weights       WeightRecord[]
-  productions   Production[]  // milk, eggs, etc.
-  breeding      BreedingRecord[]
-  goatDailyLogs GoatDailyLog[]
+  treatments          Treatment[]
+  weights             WeightRecord[]
+  productions         Production[]
+  breeding            BreedingRecord[]
+  goatDailyLogs       GoatDailyLog[]
+  penAssignments      PenAssignment[]
+  kiddingRecords      KiddingRecord[]      @relation("DoeKiddings")
+  feedRecords         FeedRecord[]
+  saleRecord          SaleRecord?
+  mortalityRecord     MortalityRecord?
+  bodyConditionScores BodyConditionScore[]
+  famachaScores       FAMACHAScore[]
 
   @@index([type, status])
   @@index([tag])
@@ -203,6 +214,8 @@ model BreedingRecord {
   notes         String?
   status        BreedingStatus @default(BRED)
   createdAt     DateTime @default(now())
+
+  kiddingRecord KiddingRecord?
 
   @@index([animalId, breedingDate])
   @@map("breeding_records")
@@ -864,6 +877,7 @@ model InventoryItem {
   updatedAt     DateTime @updatedAt
 
   transactions  InventoryTransaction[]
+  feedRecords   FeedRecord[]
 
   @@index([category, currentStock])
   @@map("inventory_items")
@@ -991,6 +1005,256 @@ enum SyncStatus {
   PENDING
   SYNCED
   FAILED
+}
+
+// ==========================================
+// GOAT PEN / GROUP MANAGEMENT
+// ==========================================
+
+model GoatPen {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Breeding Group A", "Kids Pen", "Sick Bay"
+  type        PenType
+  capacity    Int?     // Max number of goats
+  location    String?  // Physical description or GPS
+  notes       String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assignments PenAssignment[]
+  feedRecords FeedRecord[]
+
+  @@map("goat_pens")
+}
+
+enum PenType {
+  BREEDING_GROUP
+  KIDS
+  DOES
+  BUCKS
+  DRY_DOES
+  ISOLATION
+  SICK_BAY
+  GENERAL
+}
+
+model PenAssignment {
+  id         String    @id @default(cuid())
+  animalId   String
+  animal     Animal    @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  penId      String
+  pen        GoatPen   @relation(fields: [penId], references: [id], onDelete: Cascade)
+  assignedAt DateTime  @default(now())
+  removedAt  DateTime? // null = currently in this pen
+  reason     String?   // Why moved
+  notes      String?
+
+  @@index([animalId, assignedAt])
+  @@index([penId, assignedAt])
+  @@map("pen_assignments")
+}
+
+// ==========================================
+// KIDDING (BIRTH EVENT) RECORDS
+// ==========================================
+
+model KiddingRecord {
+  id               String          @id @default(cuid())
+  animalId         String          // The doe
+  animal           Animal          @relation("DoeKiddings", fields: [animalId], references: [id], onDelete: Cascade)
+  breedingRecordId String?         @unique
+  breedingRecord   BreedingRecord? @relation(fields: [breedingRecordId], references: [id])
+
+  birthDate        DateTime
+  totalBorn        Int             @default(1)
+  liveBorn         Int             @default(1)
+  stillBorn        Int             @default(0)
+
+  birthType        BirthType       @default(UNASSISTED)
+  complications    String?         // Dystocia, retained placenta, etc.
+  doesCondition    String?         // Doe condition post-birth
+  placentaExpelled Boolean?
+  placentaMinutes  Int?            // Minutes until placenta expelled
+
+  notes            String?
+  createdAt        DateTime        @default(now())
+
+  kids             Animal[]        @relation("KidsFromKidding")
+
+  @@index([animalId, birthDate])
+  @@map("kidding_records")
+}
+
+enum BirthType {
+  UNASSISTED
+  ASSISTED
+  CAESAREAN
+}
+
+// ==========================================
+// FEED RECORDS
+// ==========================================
+
+model FeedRecord {
+  id              String         @id @default(cuid())
+  date            DateTime       @db.Date
+  feedType        String         // e.g. "Maize bran", "Grass hay", "Lucerne", "Concentrates"
+  quantity        Decimal        @db.Decimal(10, 2)
+  unit            String         // kg, bags, bales, buckets
+  costPerUnit     Decimal?       @db.Decimal(10, 2)
+  totalCost       Decimal?       @db.Decimal(10, 2)
+  timeOfDay       FeedTime       @default(MORNING)
+
+  // Feed a whole pen OR a specific animal (one must be set)
+  penId           String?
+  pen             GoatPen?       @relation(fields: [penId], references: [id])
+  animalId        String?
+  animal          Animal?        @relation(fields: [animalId], references: [id])
+
+  // Deduct from inventory when linked
+  inventoryItemId String?
+  inventoryItem   InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+
+  notes           String?
+  createdAt       DateTime       @default(now())
+
+  @@index([date, penId])
+  @@index([date, animalId])
+  @@map("feed_records")
+}
+
+enum FeedTime {
+  MORNING
+  MIDDAY
+  EVENING
+}
+
+// ==========================================
+// SALE RECORDS
+// ==========================================
+
+model SaleRecord {
+  id              String        @id @default(cuid())
+  animalId        String        @unique
+  animal          Animal        @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  saleDate        DateTime      @default(now())
+  salePrice       Decimal       @db.Decimal(10, 2)
+  saleType        SaleType      @default(DIRECT)
+
+  // Buyer details
+  buyerName       String?
+  buyerPhone      String?
+  buyerLocation   String?
+
+  // Animal at time of sale
+  weightAtSale    Decimal?      @db.Decimal(8, 2)  // kg
+  ageAtSale       Int?          // months
+
+  // Costs
+  transportCost   Decimal?      @db.Decimal(10, 2)
+  marketFee       Decimal?      @db.Decimal(10, 2)
+  netAmount       Decimal?      @db.Decimal(10, 2)  // salePrice - fees
+
+  paymentMethod   String?       // Cash, Mobile Money, Bank Transfer
+  paymentStatus   SalePaymentStatus @default(PAID)
+
+  reason          String?       // Culling, cash need, overstock, etc.
+  notes           String?
+  createdAt       DateTime      @default(now())
+
+  @@index([saleDate])
+  @@map("sale_records")
+}
+
+enum SaleType {
+  DIRECT          // Direct to buyer at farm
+  MARKET          // Through livestock market
+  ABATTOIR        // To slaughterhouse
+  BREEDING_STOCK  // Sold as breeding animal
+  AUCTION
+}
+
+enum SalePaymentStatus {
+  PAID
+  PENDING
+  PARTIAL
+}
+
+// ==========================================
+// MORTALITY RECORDS
+// ==========================================
+
+model MortalityRecord {
+  id                   String         @id @default(cuid())
+  animalId             String         @unique
+  animal               Animal         @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  deathDate            DateTime
+  cause                MortalityCause
+  causeDetails         String?        // Specific disease name, accident description, etc.
+
+  // Pre-death
+  symptomsDuration     Int?           // Days showing symptoms before death
+  symptomsDescription  String?
+  treatmentsGiven      String?        // What was attempted
+
+  // Financial impact
+  estimatedValue       Decimal?       @db.Decimal(10, 2)
+
+  // Investigation
+  necropsyDone         Boolean        @default(false)
+  necropsyFindings     String?
+
+  notes                String?
+  createdAt            DateTime       @default(now())
+
+  @@map("mortality_records")
+}
+
+enum MortalityCause {
+  DISEASE
+  PARASITES
+  PREDATOR
+  ACCIDENT
+  POISONING
+  BIRTHING_COMPLICATIONS
+  STARVATION
+  DEHYDRATION
+  OLD_AGE
+  UNKNOWN
+}
+
+// ==========================================
+// HEALTH ASSESSMENTS
+// ==========================================
+
+model BodyConditionScore {
+  id         String   @id @default(cuid())
+  animalId   String
+  animal     Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  score      Decimal  @db.Decimal(3, 1)  // 1.0 (emaciated) to 5.0 (obese)
+  assessedAt DateTime @default(now())
+  notes      String?  // e.g. "Too thin - increase concentrate feed"
+  createdAt  DateTime @default(now())
+
+  @@index([animalId, assessedAt])
+  @@map("body_condition_scores")
+}
+
+model FAMACHAScore {
+  id                 String   @id @default(cuid())
+  animalId           String
+  animal             Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  score              Int      // 1 (healthy/pink) to 5 (severely anemic/white)
+  assessedAt         DateTime @default(now())
+  dewormingRequired  Boolean  @default(false)  // true when score >= 3
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  @@index([animalId, assessedAt])
+  @@map("famacha_scores")
 }
 
 model Setting {
