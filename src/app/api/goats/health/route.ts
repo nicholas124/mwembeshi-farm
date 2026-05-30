@@ -132,8 +132,8 @@ export async function POST(request: NextRequest) {
     if (!animalIds || animalIds.length === 0) {
       return NextResponse.json({ success: false, error: 'Select at least one goat' }, { status: 400 });
     }
-    if (!type || !description) {
-      return NextResponse.json({ success: false, error: 'Type and description are required' }, { status: 400 });
+    if (!type) {
+      return NextResponse.json({ success: false, error: "Treatment type is required" }, { status: 400 });
     }
 
     const treatments = await prisma.$transaction(

@@ -342,7 +342,7 @@ function AssessTab({ bcs, famacha }: { bcs: any[]; famacha: any[] }) {
   const combined = [
     ...bcs.map((b: any) => ({ ...b, kind: "BCS" })),
     ...famacha.map((f: any) => ({ ...f, kind: "FAMACHA" })),
-  ].sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+  ].sort((a, b) => new Date(b.assessedAt).getTime() - new Date(a.assessedAt).getTime());
 
   return (
     <View>
@@ -438,7 +438,9 @@ function RecordModal({
   const [value, setValue] = useState("");
   const [notes, setNotes] = useState("");
   const [treatmentType, setTreatmentType] = useState("CHECKUP");
+  const [description, setDescription] = useState("");
   const [medication, setMedication] = useState("");
+  const [dosage, setDosage] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [saleType, setSaleType] = useState("DIRECT");
   const [buyerName, setBuyerName] = useState("");
@@ -459,8 +461,9 @@ function RecordModal({
         await createTreatment({
           animalIds: [goatId],
           type: treatmentType,
-          description: notes,
-          medication,
+          description: description || undefined,
+          medication: medication || undefined,
+          dosage: dosage || undefined,
           treatmentDate: new Date().toISOString(),
         });
         Alert.alert("Saved", "Treatment recorded");
@@ -495,7 +498,7 @@ function RecordModal({
         Alert.alert("Saved", "Assessment recorded");
       }
 
-      setValue(""); setNotes(""); setMedication(""); setSalePrice(""); setBuyerName("");
+      setValue(""); setNotes(""); setDescription(""); setMedication(""); setDosage(""); setSalePrice(""); setBuyerName("");
       setBcsScore(3); setFamachaScore(1); setDeathCause("UNKNOWN");
       onSuccess();
     } catch (e: any) {
@@ -562,11 +565,21 @@ function RecordModal({
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <Text style={labelStyle}>Medication</Text>
-              <TextInput style={inputStyle} placeholder="Medication name" placeholderTextColor="#9ca3af" value={medication} onChangeText={setMedication} />
-              <Text style={labelStyle}>Notes</Text>
+              <Text style={labelStyle}>Description (optional)</Text>
+              <TextInput style={inputStyle} placeholder="e.g. Annual deworming round" placeholderTextColor="#9ca3af" value={description} onChangeText={setDescription} />
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={labelStyle}>Medication (optional)</Text>
+                  <TextInput style={inputStyle} placeholder="e.g. Ivermectin" placeholderTextColor="#9ca3af" value={medication} onChangeText={setMedication} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={labelStyle}>Dosage (optional)</Text>
+                  <TextInput style={inputStyle} placeholder="e.g. 5ml" placeholderTextColor="#9ca3af" value={dosage} onChangeText={setDosage} />
+                </View>
+              </View>
+              <Text style={labelStyle}>Notes (optional)</Text>
               <TextInput style={[inputStyle, { minHeight: 70, textAlignVertical: "top" }]}
-                placeholder="Observations, dosage details..." placeholderTextColor="#9ca3af"
+                placeholder="Additional observations..." placeholderTextColor="#9ca3af"
                 value={notes} onChangeText={setNotes} multiline />
             </>
           )}
