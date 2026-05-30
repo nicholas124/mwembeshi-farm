@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getHealth, createTreatment, getGoats } from "../../lib/api";
 
 const TREATMENT_TYPES = [
@@ -38,6 +39,7 @@ const TYPE_CONFIG: Record<string, { icon: string; color: string }> = {
 type Tab = "overdue" | "upcoming" | "recent" | "untreated";
 
 export default function HealthScreen() {
+  const insets = useSafeAreaInsets();
   const [tab, setTab] = useState<Tab>("recent");
   const [showBulkModal, setShowBulkModal] = useState(false);
   const queryClient = useQueryClient();
@@ -212,7 +214,7 @@ export default function HealthScreen() {
         onPress={() => setShowBulkModal(true)}
         activeOpacity={0.8}
         style={{
-          position: "absolute", bottom: 90, right: 20,
+          position: "absolute", bottom: insets.bottom + 74, right: 20,
           backgroundColor: "#16a34a", width: 56, height: 56,
           borderRadius: 28, alignItems: "center", justifyContent: "center",
           shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 },

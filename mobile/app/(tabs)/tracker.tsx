@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getDailyLogs, createDailyLog } from "../../lib/api";
 
 const ACTIVITIES = [
@@ -37,6 +38,7 @@ const STATUS_CONFIG: Record<string, { icon: string; color: string; label: string
 };
 
 export default function TrackerScreen() {
+  const insets = useSafeAreaInsets();
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split("T")[0];
@@ -147,7 +149,7 @@ export default function TrackerScreen() {
         onPress={() => setShowModal(true)}
         activeOpacity={0.8}
         style={{
-          position: "absolute", bottom: 90, right: 20,
+          position: "absolute", bottom: insets.bottom + 74, right: 20,
           backgroundColor: "#16a34a", width: 56, height: 56,
           borderRadius: 28, alignItems: "center", justifyContent: "center",
           shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 },

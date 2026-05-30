@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getBreeding, createBreeding } from "../../lib/api";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -31,6 +32,7 @@ const FILTERS = [
 ];
 
 export default function BreedingScreen() {
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<string>("all");
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
@@ -187,7 +189,7 @@ export default function BreedingScreen() {
         onPress={() => setShowModal(true)}
         activeOpacity={0.8}
         style={{
-          position: "absolute", bottom: 90, right: 20,
+          position: "absolute", bottom: insets.bottom + 74, right: 20,
           backgroundColor: "#16a34a", width: 56, height: 56,
           borderRadius: 28, alignItems: "center", justifyContent: "center",
           shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 },
