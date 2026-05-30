@@ -16,44 +16,24 @@ import { Ionicons } from "@expo/vector-icons";
 import { getDailyLogs, createDailyLog } from "../../lib/api";
 
 const ACTIVITIES = [
-  "FEEDING",
-  "WATERING",
-  "MILKING",
-  "CLEANING",
-  "HEALTH_CHECK",
-  "VACCINATION",
-  "DEWORMING",
-  "HOOF_TRIMMING",
-  "BREEDING",
-  "KIDDING_ASSIST",
-  "WEIGHING",
-  "MOVING_PASTURE",
-  "MEDICATION",
-  "OTHER",
+  "FEEDING", "WATERING", "MILKING", "CLEANING", "HEALTH_CHECK",
+  "VACCINATION", "DEWORMING", "HOOF_TRIMMING", "BREEDING",
+  "KIDDING_ASSIST", "WEIGHING", "MOVING_PASTURE", "MEDICATION", "OTHER",
 ] as const;
 
 const ACTIVITY_ICONS: Record<string, string> = {
-  FEEDING: "nutrition",
-  WATERING: "water",
-  MILKING: "beaker",
-  CLEANING: "sparkles",
-  HEALTH_CHECK: "fitness",
-  VACCINATION: "shield-checkmark",
-  DEWORMING: "bug",
-  HOOF_TRIMMING: "cut",
-  BREEDING: "heart",
-  KIDDING_ASSIST: "hand-left",
-  WEIGHING: "scale",
-  MOVING_PASTURE: "swap-horizontal",
-  MEDICATION: "medkit",
-  OTHER: "ellipsis-horizontal",
+  FEEDING: "nutrition", WATERING: "water", MILKING: "beaker",
+  CLEANING: "sparkles", HEALTH_CHECK: "fitness", VACCINATION: "shield-checkmark",
+  DEWORMING: "bug", HOOF_TRIMMING: "cut", BREEDING: "heart",
+  KIDDING_ASSIST: "hand-left", WEIGHING: "scale", MOVING_PASTURE: "swap-horizontal",
+  MEDICATION: "medkit", OTHER: "ellipsis-horizontal",
 };
 
-const STATUS_ICONS: Record<string, { icon: string; color: string }> = {
-  COMPLETED: { icon: "checkmark-circle", color: "#22c55e" },
-  IN_PROGRESS: { icon: "time", color: "#f59e0b" },
-  PLANNED: { icon: "calendar", color: "#3b82f6" },
-  SKIPPED: { icon: "close-circle", color: "#ef4444" },
+const STATUS_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
+  COMPLETED:   { icon: "checkmark-circle", color: "#22c55e", label: "Completed" },
+  IN_PROGRESS: { icon: "time",             color: "#f59e0b", label: "In Progress" },
+  PLANNED:     { icon: "calendar",         color: "#3b82f6", label: "Planned" },
+  SKIPPED:     { icon: "close-circle",     color: "#ef4444", label: "Skipped" },
 };
 
 export default function TrackerScreen() {
@@ -68,28 +48,25 @@ export default function TrackerScreen() {
 
   const logs = data?.logs || [];
 
-  function formatTime(d: string) {
-    return new Date(d).toLocaleTimeString("en-GB", {
-      hour: "2-digit", minute: "2-digit",
-    });
-  }
-
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
       {/* Date Header */}
-      <View className="bg-white px-4 py-3 border-b border-gray-100">
-        <Text className="text-base font-semibold text-gray-900">
-          Today - {new Date().toLocaleDateString("en-GB", {
+      <View style={{
+        backgroundColor: "white", paddingHorizontal: 16, paddingVertical: 14,
+        borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+      }}>
+        <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>
+          Today — {new Date().toLocaleDateString("en-GB", {
             weekday: "long", day: "numeric", month: "long",
           })}
         </Text>
-        <Text className="text-sm text-gray-500 mt-0.5">
+        <Text style={{ fontSize: 13, color: "#9ca3af", marginTop: 2 }}>
           {logs.length} activit{logs.length === 1 ? "y" : "ies"} logged
         </Text>
       </View>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color="#16a34a" />
         </View>
       ) : (
@@ -101,55 +78,65 @@ export default function TrackerScreen() {
           }
           contentContainerStyle={{ paddingTop: 12, paddingBottom: 100 }}
           renderItem={({ item }) => {
-            const si = STATUS_ICONS[item.status] || STATUS_ICONS.COMPLETED;
+            const si = STATUS_CONFIG[item.status] || STATUS_CONFIG.COMPLETED;
             return (
-              <View className="bg-white mx-4 mb-3 rounded-2xl p-4 border border-gray-100">
-                <View className="flex-row items-center justify-between mb-2">
-                  <View className="flex-row items-center gap-2">
-                    <Ionicons
-                      name={(ACTIVITY_ICONS[item.activityType] || "ellipsis-horizontal") as any}
-                      size={18}
-                      color="#16a34a"
-                    />
-                    <Text className="text-base font-semibold text-gray-900">
+              <View style={{
+                backgroundColor: "white", marginHorizontal: 16, marginBottom: 10,
+                borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#f3f4f6",
+              }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <View style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: "#f0fdf4", alignItems: "center", justifyContent: "center" }}>
+                      <Ionicons
+                        name={(ACTIVITY_ICONS[item.activityType] || "ellipsis-horizontal") as any}
+                        size={18}
+                        color="#16a34a"
+                      />
+                    </View>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: "#111827" }}>
                       {item.activityType.replace(/_/g, " ")}
                     </Text>
                   </View>
-                  <View className="flex-row items-center gap-1">
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
                     <Ionicons name={si.icon as any} size={14} color={si.color} />
-                    <Text style={{ color: si.color }} className="text-xs font-medium">
-                      {item.status}
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: si.color }}>
+                      {si.label}
                     </Text>
                   </View>
                 </View>
+
                 {item.description && (
-                  <Text className="text-sm text-gray-600 mb-1">{item.description}</Text>
+                  <Text style={{ fontSize: 13, color: "#6b7280", marginBottom: 4 }}>{item.description}</Text>
                 )}
-                <View className="flex-row items-center gap-4 mt-1">
+
+                <View style={{ flexDirection: "row", gap: 12, marginTop: 4 }}>
                   {item.goatsAffected > 0 && (
-                    <Text className="text-xs text-gray-400">
-                      {item.goatsAffected} goat(s)
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                      <Ionicons name="paw-outline" size={12} color="#9ca3af" />
+                      <Text style={{ fontSize: 12, color: "#9ca3af" }}>{item.goatsAffected} goat(s)</Text>
+                    </View>
                   )}
                   {item.timeSpent > 0 && (
-                    <Text className="text-xs text-gray-400">
-                      {item.timeSpent}h
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                      <Ionicons name="time-outline" size={12} color="#9ca3af" />
+                      <Text style={{ fontSize: 12, color: "#9ca3af" }}>{item.timeSpent}h</Text>
+                    </View>
                   )}
                   {item.worker && (
-                    <Text className="text-xs text-gray-400">
-                      by {item.worker.name}
-                    </Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                      <Ionicons name="person-outline" size={12} color="#9ca3af" />
+                      <Text style={{ fontSize: 12, color: "#9ca3af" }}>{item.worker.name}</Text>
+                    </View>
                   )}
                 </View>
               </View>
             );
           }}
           ListEmptyComponent={
-            <View className="items-center py-20">
+            <View style={{ alignItems: "center", paddingTop: 80 }}>
               <Ionicons name="calendar-outline" size={48} color="#d1d5db" />
-              <Text className="text-gray-400 mt-3">No activities logged today</Text>
-              <Text className="text-gray-300 text-sm mt-1">Tap + to log an activity</Text>
+              <Text style={{ color: "#9ca3af", marginTop: 12, fontSize: 14 }}>No activities logged today</Text>
+              <Text style={{ color: "#d1d5db", fontSize: 13, marginTop: 4 }}>Tap + to log an activity</Text>
             </View>
           }
         />
@@ -158,8 +145,14 @@ export default function TrackerScreen() {
       {/* FAB */}
       <TouchableOpacity
         onPress={() => setShowModal(true)}
-        className="absolute bottom-24 right-5 bg-primary-600 w-14 h-14 rounded-full items-center justify-center shadow-lg"
         activeOpacity={0.8}
+        style={{
+          position: "absolute", bottom: 90, right: 20,
+          backgroundColor: "#16a34a", width: 56, height: 56,
+          borderRadius: 28, alignItems: "center", justifyContent: "center",
+          shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.4, shadowRadius: 8, elevation: 6,
+        }}
       >
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
@@ -220,63 +213,75 @@ function NewLogModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+      <View style={{ flex: 1, backgroundColor: "white" }}>
+        {/* Header */}
+        <View style={{
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+          paddingHorizontal: 16, paddingVertical: 16,
+          borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+        }}>
           <TouchableOpacity onPress={onClose}>
-            <Text className="text-primary-600 text-base">Cancel</Text>
+            <Text style={{ color: "#16a34a", fontSize: 16 }}>Cancel</Text>
           </TouchableOpacity>
-          <Text className="text-lg font-bold">Log Activity</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700" }}>Log Activity</Text>
           <TouchableOpacity onPress={handleSubmit} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size="small" color="#16a34a" />
-            ) : (
-              <Text className="text-primary-600 text-base font-semibold">Save</Text>
-            )}
+            {loading
+              ? <ActivityIndicator size="small" color="#16a34a" />
+              : <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "600" }}>Save</Text>
+            }
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 p-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">Activity Type</Text>
-          <View className="flex-row flex-wrap gap-2 mb-4">
-            {ACTIVITIES.map((a) => (
-              <TouchableOpacity
-                key={a}
-                onPress={() => setActivityType(a)}
-                className={`px-3 py-2 rounded-lg ${
-                  activityType === a ? "bg-primary-600" : "bg-gray-100"
-                }`}
-              >
-                <Text className={`text-xs font-medium ${
-                  activityType === a ? "text-white" : "text-gray-600"
-                }`}>{a.replace(/_/g, " ")}</Text>
-              </TouchableOpacity>
-            ))}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+          {/* Activity Type */}
+          <Text style={formLabel}>Activity Type</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+            {ACTIVITIES.map((a) => {
+              const active = activityType === a;
+              return (
+                <TouchableOpacity
+                  key={a}
+                  onPress={() => setActivityType(a)}
+                  style={{
+                    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                    backgroundColor: active ? "#16a34a" : "#f3f4f6",
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: active ? "white" : "#6b7280" }}>
+                    {a.replace(/_/g, " ")}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-          <Text className="text-sm font-medium text-gray-700 mb-1.5">Description</Text>
+          <Text style={formLabel}>Description</Text>
           <TextInput
-            className="border border-gray-300 rounded-xl px-4 py-3 mb-3 text-base bg-gray-50"
+            style={formInput}
             placeholder="What was done?"
+            placeholderTextColor="#9ca3af"
             value={description}
             onChangeText={setDescription}
           />
 
-          <View className="flex-row gap-3 mb-3">
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">Goats Affected</Text>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={formLabel}>Goats Affected</Text>
               <TextInput
-                className="border border-gray-300 rounded-xl px-4 py-3 text-base bg-gray-50"
+                style={formInput}
                 placeholder="0"
+                placeholderTextColor="#9ca3af"
                 value={goatsAffected}
                 onChangeText={setGoatsAffected}
                 keyboardType="numeric"
               />
             </View>
-            <View className="flex-1">
-              <Text className="text-sm font-medium text-gray-700 mb-1.5">Time (hours)</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={formLabel}>Time (hours)</Text>
               <TextInput
-                className="border border-gray-300 rounded-xl px-4 py-3 text-base bg-gray-50"
+                style={formInput}
                 placeholder="0"
+                placeholderTextColor="#9ca3af"
                 value={timeSpent}
                 onChangeText={setTimeSpent}
                 keyboardType="decimal-pad"
@@ -284,27 +289,36 @@ function NewLogModal({
             </View>
           </View>
 
-          <Text className="text-sm font-medium text-gray-700 mb-2">Status</Text>
-          <View className="flex-row gap-2 mb-4">
-            {["COMPLETED", "IN_PROGRESS", "PLANNED", "SKIPPED"].map((s) => (
-              <TouchableOpacity
-                key={s}
-                onPress={() => setStatus(s)}
-                className={`px-3 py-2 rounded-lg ${
-                  status === s ? "bg-primary-600" : "bg-gray-100"
-                }`}
-              >
-                <Text className={`text-xs font-medium ${
-                  status === s ? "text-white" : "text-gray-600"
-                }`}>{s}</Text>
-              </TouchableOpacity>
-            ))}
+          {/* Status */}
+          <Text style={formLabel}>Status</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+            {(["COMPLETED", "IN_PROGRESS", "PLANNED", "SKIPPED"] as const).map((s) => {
+              const active = status === s;
+              const cfg = STATUS_CONFIG[s];
+              return (
+                <TouchableOpacity
+                  key={s}
+                  onPress={() => setStatus(s)}
+                  style={{
+                    paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10,
+                    backgroundColor: active ? cfg.color : "#f3f4f6",
+                    flexDirection: "row", alignItems: "center", gap: 5,
+                  }}
+                >
+                  <Ionicons name={cfg.icon as any} size={14} color={active ? "white" : "#9ca3af"} />
+                  <Text style={{ fontSize: 12, fontWeight: "600", color: active ? "white" : "#6b7280" }}>
+                    {cfg.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-          <Text className="text-sm font-medium text-gray-700 mb-1.5">Notes</Text>
+          <Text style={formLabel}>Notes</Text>
           <TextInput
-            className="border border-gray-300 rounded-xl px-4 py-3 text-base bg-gray-50"
+            style={[formInput, { minHeight: 80, textAlignVertical: "top" }]}
             placeholder="Additional notes"
+            placeholderTextColor="#9ca3af"
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -315,3 +329,10 @@ function NewLogModal({
     </Modal>
   );
 }
+
+const formLabel = { fontSize: 13, fontWeight: "600" as const, color: "#374151", marginBottom: 6 };
+const formInput = {
+  backgroundColor: "#f9fafb", borderWidth: 1, borderColor: "#e5e7eb",
+  borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+  fontSize: 15, color: "#111827", marginBottom: 14,
+};

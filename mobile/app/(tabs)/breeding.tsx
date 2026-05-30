@@ -16,11 +16,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { getBreeding, createBreeding } from "../../lib/api";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  BRED: { bg: "#dbeafe", text: "#1d4ed8" },
-  PREGNANT: { bg: "#f3e8ff", text: "#7e22ce" },
-  BIRTHED: { bg: "#dcfce7", text: "#15803d" },
-  FAILED: { bg: "#fee2e2", text: "#b91c1c" },
+  BRED:      { bg: "#dbeafe", text: "#1d4ed8" },
+  PREGNANT:  { bg: "#f3e8ff", text: "#7e22ce" },
+  BIRTHED:   { bg: "#dcfce7", text: "#15803d" },
+  FAILED:    { bg: "#fee2e2", text: "#b91c1c" },
 };
+
+const FILTERS = [
+  { key: "all", label: "All" },
+  { key: "PREGNANT", label: "Pregnant" },
+  { key: "BRED", label: "Bred" },
+  { key: "BIRTHED", label: "Birthed" },
+  { key: "FAILED", label: "Failed" },
+];
 
 export default function BreedingScreen() {
   const [filter, setFilter] = useState<string>("all");
@@ -38,9 +46,7 @@ export default function BreedingScreen() {
   const availableDoes = data?.availableDoes || [];
 
   const filtered =
-    filter === "all"
-      ? records
-      : records.filter((r: any) => r.status === filter);
+    filter === "all" ? records : records.filter((r: any) => r.status === filter);
 
   function formatDate(d: string) {
     return new Date(d).toLocaleDateString("en-GB", {
@@ -49,52 +55,61 @@ export default function BreedingScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View style={{ flex: 1, backgroundColor: "#f9fafb" }}>
       {/* Stats */}
       {stats && (
-        <View className="flex-row bg-white px-4 py-3 border-b border-gray-100">
-          <View className="flex-1 items-center">
-            <Text className="text-lg font-bold text-purple-600">{stats.pregnant}</Text>
-            <Text className="text-xs text-gray-500">Pregnant</Text>
+        <View style={{
+          flexDirection: "row", backgroundColor: "white",
+          paddingHorizontal: 16, paddingVertical: 14,
+          borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+        }}>
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: "#7e22ce" }}>{stats.pregnant}</Text>
+            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>Pregnant</Text>
           </View>
-          <View className="flex-1 items-center">
-            <Text className="text-lg font-bold text-blue-600">{stats.totalBred}</Text>
-            <Text className="text-xs text-gray-500">Total Bred</Text>
+          <View style={{ width: 1, backgroundColor: "#f3f4f6" }} />
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: "#1d4ed8" }}>{stats.totalBred}</Text>
+            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>Total Bred</Text>
           </View>
-          <View className="flex-1 items-center">
-            <Text className="text-lg font-bold text-green-600">{stats.totalBirthed}</Text>
-            <Text className="text-xs text-gray-500">Birthed</Text>
+          <View style={{ width: 1, backgroundColor: "#f3f4f6" }} />
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={{ fontSize: 22, fontWeight: "800", color: "#15803d" }}>{stats.totalBirthed}</Text>
+            <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>Birthed</Text>
           </View>
         </View>
       )}
 
-      {/* Filter */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-4 py-3">
-        <View className="flex-row gap-2">
-          {[
-            { key: "all", label: "All" },
-            { key: "PREGNANT", label: "Pregnant" },
-            { key: "BRED", label: "Bred" },
-            { key: "BIRTHED", label: "Birthed" },
-            { key: "FAILED", label: "Failed" },
-          ].map((f) => (
+      {/* Filter chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ flexGrow: 0 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 12, gap: 8 }}
+      >
+        {FILTERS.map((f) => {
+          const active = filter === f.key;
+          return (
             <TouchableOpacity
               key={f.key}
               onPress={() => setFilter(f.key)}
-              className={`px-4 py-1.5 rounded-full ${
-                filter === f.key ? "bg-primary-600" : "bg-white border border-gray-200"
-              }`}
+              style={{
+                paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20,
+                backgroundColor: active ? "#16a34a" : "white",
+                borderWidth: 1, borderColor: active ? "#16a34a" : "#e5e7eb",
+                marginRight: 8,
+              }}
             >
-              <Text className={`text-sm font-medium ${
-                filter === f.key ? "text-white" : "text-gray-600"
-              }`}>{f.label}</Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: active ? "white" : "#6b7280" }}>
+                {f.label}
+              </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+          );
+        })}
       </ScrollView>
 
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color="#16a34a" />
         </View>
       ) : (
@@ -108,40 +123,50 @@ export default function BreedingScreen() {
           renderItem={({ item }) => {
             const sc = STATUS_COLORS[item.status] || STATUS_COLORS.BRED;
             return (
-              <View className="bg-white mx-4 mb-3 rounded-2xl p-4 border border-gray-100">
-                <View className="flex-row items-center justify-between mb-2">
-                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: sc.bg }}>
-                    <Text style={{ fontSize: 11, fontWeight: "700", color: sc.text }}>{item.status}</Text>
+              <View style={{
+                backgroundColor: "white", marginHorizontal: 16, marginBottom: 10,
+                borderRadius: 16, padding: 16, borderWidth: 1, borderColor: "#f3f4f6",
+              }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <View style={{
+                    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
+                    backgroundColor: sc.bg,
+                  }}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: sc.text }}>
+                      {item.status}
+                    </Text>
                   </View>
-                  <Text className="text-xs text-gray-400">
+                  <Text style={{ fontSize: 12, color: "#9ca3af" }}>
                     {item.breedingDate ? formatDate(item.breedingDate) : ""}
                   </Text>
                 </View>
-                <View className="flex-row items-center gap-3">
-                  <View className="flex-1">
-                    <Text className="text-xs text-gray-400">Dam (Female)</Text>
-                    <Text className="text-base font-semibold text-gray-900">
+
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, color: "#9ca3af" }}>Dam (Female)</Text>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827", marginTop: 2 }}>
                       {item.female?.name || item.female?.tag || "Unknown"}
                     </Text>
                   </View>
                   <Ionicons name="heart" size={16} color="#ec4899" />
-                  <View className="flex-1">
-                    <Text className="text-xs text-gray-400">Sire (Male)</Text>
-                    <Text className="text-base font-semibold text-gray-900">
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 11, color: "#9ca3af" }}>Sire (Male)</Text>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827", marginTop: 2 }}>
                       {item.male?.name || item.male?.tag || "Unknown"}
                     </Text>
                   </View>
                 </View>
+
                 {item.expectedDueDate && (
-                  <View className="flex-row items-center mt-2 gap-1">
+                  <View style={{ flexDirection: "row", alignItems: "center", marginTop: 8, gap: 4 }}>
                     <Ionicons name="calendar-outline" size={14} color="#8b5cf6" />
-                    <Text className="text-sm text-purple-600">
+                    <Text style={{ fontSize: 13, color: "#7e22ce" }}>
                       Due: {formatDate(item.expectedDueDate)}
                     </Text>
                   </View>
                 )}
                 {item.offspringCount > 0 && (
-                  <Text className="text-sm text-green-600 mt-1">
+                  <Text style={{ fontSize: 13, color: "#16a34a", marginTop: 4 }}>
                     {item.offspringCount} kid(s) born
                   </Text>
                 )}
@@ -149,9 +174,9 @@ export default function BreedingScreen() {
             );
           }}
           ListEmptyComponent={
-            <View className="items-center py-20">
+            <View style={{ alignItems: "center", paddingTop: 80 }}>
               <Ionicons name="heart-outline" size={48} color="#d1d5db" />
-              <Text className="text-gray-400 mt-3">No breeding records</Text>
+              <Text style={{ color: "#9ca3af", marginTop: 12, fontSize: 14 }}>No breeding records</Text>
             </View>
           }
         />
@@ -160,8 +185,14 @@ export default function BreedingScreen() {
       {/* FAB */}
       <TouchableOpacity
         onPress={() => setShowModal(true)}
-        className="absolute bottom-24 right-5 bg-primary-600 w-14 h-14 rounded-full items-center justify-center shadow-lg"
         activeOpacity={0.8}
+        style={{
+          position: "absolute", bottom: 90, right: 20,
+          backgroundColor: "#16a34a", width: 56, height: 56,
+          borderRadius: 28, alignItems: "center", justifyContent: "center",
+          shadowColor: "#16a34a", shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.4, shadowRadius: 8, elevation: 6,
+        }}
       >
         <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
@@ -229,64 +260,98 @@ function NewBreedingModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
-      <View className="flex-1 bg-white">
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+      <View style={{ flex: 1, backgroundColor: "white" }}>
+        {/* Header */}
+        <View style={{
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+          paddingHorizontal: 16, paddingVertical: 16,
+          borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+        }}>
           <TouchableOpacity onPress={onClose}>
-            <Text className="text-primary-600 text-base">Cancel</Text>
+            <Text style={{ color: "#16a34a", fontSize: 16 }}>Cancel</Text>
           </TouchableOpacity>
-          <Text className="text-lg font-bold">Record Breeding</Text>
+          <Text style={{ fontSize: 17, fontWeight: "700" }}>Record Breeding</Text>
           <TouchableOpacity onPress={handleSubmit} disabled={loading}>
-            {loading ? (
-              <ActivityIndicator size="small" color="#16a34a" />
-            ) : (
-              <Text className="text-primary-600 text-base font-semibold">Save</Text>
-            )}
+            {loading
+              ? <ActivityIndicator size="small" color="#16a34a" />
+              : <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "600" }}>Save</Text>
+            }
           </TouchableOpacity>
         </View>
 
-        <ScrollView className="flex-1 p-4">
-          <Text className="text-sm font-medium text-gray-700 mb-2">Select Sire (Buck)</Text>
-          {bucks.map((b: any) => (
-            <TouchableOpacity
-              key={b.id}
-              onPress={() => setSireId(b.id)}
-              className={`flex-row items-center p-3 rounded-xl mb-2 border ${
-                sireId === b.id ? "border-blue-500 bg-blue-50" : "border-gray-200"
-              }`}
-            >
-              <Ionicons
-                name={sireId === b.id ? "radio-button-on" : "radio-button-off"}
-                size={20}
-                color={sireId === b.id ? "#3b82f6" : "#9ca3af"}
-              />
-              <Text className="ml-3 text-base font-medium">{b.name || b.tag}</Text>
-              <Text className="ml-2 text-sm text-gray-400">{b.breed}</Text>
-            </TouchableOpacity>
-          ))}
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
+          {/* Sire (Buck) */}
+          <Text style={formLabel}>Select Sire (Buck)</Text>
+          {bucks.length === 0 && (
+            <Text style={{ color: "#9ca3af", fontSize: 13, marginBottom: 12 }}>No bucks available</Text>
+          )}
+          {bucks.map((b: any) => {
+            const selected = sireId === b.id;
+            return (
+              <TouchableOpacity
+                key={b.id}
+                onPress={() => setSireId(b.id)}
+                style={{
+                  flexDirection: "row", alignItems: "center", padding: 12,
+                  borderRadius: 12, marginBottom: 8, borderWidth: 1,
+                  borderColor: selected ? "#3b82f6" : "#e5e7eb",
+                  backgroundColor: selected ? "#eff6ff" : "white",
+                }}
+              >
+                <Ionicons
+                  name={selected ? "radio-button-on" : "radio-button-off"}
+                  size={20}
+                  color={selected ? "#3b82f6" : "#9ca3af"}
+                />
+                <Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "500", color: "#111827" }}>
+                  {b.name || b.tag}
+                </Text>
+                <Text style={{ marginLeft: 8, fontSize: 13, color: "#9ca3af" }}>{b.breed}</Text>
+              </TouchableOpacity>
+            );
+          })}
 
-          <Text className="text-sm font-medium text-gray-700 mb-2 mt-4">Select Dam (Doe)</Text>
-          {does.map((d: any) => (
-            <TouchableOpacity
-              key={d.id}
-              onPress={() => setDamId(d.id)}
-              className={`flex-row items-center p-3 rounded-xl mb-2 border ${
-                damId === d.id ? "border-pink-500 bg-pink-50" : "border-gray-200"
-              }`}
-            >
-              <Ionicons
-                name={damId === d.id ? "radio-button-on" : "radio-button-off"}
-                size={20}
-                color={damId === d.id ? "#ec4899" : "#9ca3af"}
-              />
-              <Text className="ml-3 text-base font-medium">{d.name || d.tag}</Text>
-              <Text className="ml-2 text-sm text-gray-400">{d.breed}</Text>
-            </TouchableOpacity>
-          ))}
+          {/* Dam (Doe) */}
+          <Text style={[formLabel, { marginTop: 12 }]}>Select Dam (Doe)</Text>
+          {does.length === 0 && (
+            <Text style={{ color: "#9ca3af", fontSize: 13, marginBottom: 12 }}>No does available</Text>
+          )}
+          {does.map((d: any) => {
+            const selected = damId === d.id;
+            return (
+              <TouchableOpacity
+                key={d.id}
+                onPress={() => setDamId(d.id)}
+                style={{
+                  flexDirection: "row", alignItems: "center", padding: 12,
+                  borderRadius: 12, marginBottom: 8, borderWidth: 1,
+                  borderColor: selected ? "#ec4899" : "#e5e7eb",
+                  backgroundColor: selected ? "#fdf2f8" : "white",
+                }}
+              >
+                <Ionicons
+                  name={selected ? "radio-button-on" : "radio-button-off"}
+                  size={20}
+                  color={selected ? "#ec4899" : "#9ca3af"}
+                />
+                <Text style={{ marginLeft: 12, fontSize: 15, fontWeight: "500", color: "#111827" }}>
+                  {d.name || d.tag}
+                </Text>
+                <Text style={{ marginLeft: 8, fontSize: 13, color: "#9ca3af" }}>{d.breed}</Text>
+              </TouchableOpacity>
+            );
+          })}
 
-          <Text className="text-sm font-medium text-gray-700 mb-1.5 mt-4">Notes</Text>
+          {/* Notes */}
+          <Text style={[formLabel, { marginTop: 12 }]}>Notes</Text>
           <TextInput
-            className="border border-gray-300 rounded-xl px-4 py-3 text-base bg-gray-50"
+            style={{
+              backgroundColor: "#f9fafb", borderWidth: 1, borderColor: "#e5e7eb",
+              borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12,
+              fontSize: 15, color: "#111827", minHeight: 80, textAlignVertical: "top",
+            }}
             placeholder="Optional notes"
+            placeholderTextColor="#9ca3af"
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -296,3 +361,5 @@ function NewBreedingModal({
     </Modal>
   );
 }
+
+const formLabel = { fontSize: 13, fontWeight: "600" as const, color: "#374151", marginBottom: 8 };
