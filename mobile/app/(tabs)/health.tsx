@@ -14,7 +14,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getHealth, createTreatment, getGoats } from "../../lib/api";
+import { getHealth, createTreatment, getGoats, deleteTreatments } from "../../lib/api";
 
 const TREATMENT_TYPES = [
   "VACCINATION",
@@ -69,6 +69,28 @@ export default function HealthScreen() {
     return new Date(d).toLocaleDateString("en-GB", {
       day: "numeric", month: "short", year: "numeric",
     });
+  }
+
+  function handleDelete(id: string, animalName: string) {
+    Alert.alert(
+      "Delete Treatment",
+      `Remove this treatment record for ${animalName}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteTreatments([id]);
+              queryClient.invalidateQueries({ queryKey: ["health"] });
+            } catch (e: any) {
+              Alert.alert("Error", e.message);
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -167,12 +189,18 @@ export default function HealthScreen() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-                      <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827" }}>
+                      <Text style={{ fontSize: 15, fontWeight: "600", color: "#111827", flex: 1 }}>
                         {item.animal?.name || item.animal?.tag}
                       </Text>
-                      <Text style={{ fontSize: 12, color: "#9ca3af" }}>
+                      <Text style={{ fontSize: 12, color: "#9ca3af", marginRight: 10 }}>
                         {item.treatmentDate ? formatDate(item.treatmentDate) : ""}
                       </Text>
+                      <TouchableOpacity
+                        onPress={() => handleDelete(item.id, item.animal?.name || item.animal?.tag || "goat")}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                      </TouchableOpacity>
                     </View>
                     <Text style={{ fontSize: 13, color: "#16a34a", fontWeight: "500", marginTop: 2 }}>
                       {item.type}

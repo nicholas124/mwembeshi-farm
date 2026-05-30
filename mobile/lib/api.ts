@@ -83,7 +83,7 @@ export async function createTreatment(data: any) {
 }
 
 export async function deleteTreatments(ids: string[]) {
-  return request<any>("/api/goats/health", { method: "DELETE", body: JSON.stringify({ ids }) });
+  return request<any>("/api/goats/health", { method: "DELETE", body: JSON.stringify({ treatmentIds: ids }) });
 }
 
 // ─── Breeding ────────────────────────────────────────────────────────────────
