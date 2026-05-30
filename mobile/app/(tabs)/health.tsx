@@ -226,7 +226,7 @@ function BulkTreatmentModal({
     enabled: visible,
   });
 
-  const goats = goatsData?.goats || [];
+  const goats = goatsData?.data || [];
 
   function toggleGoat(id: string) {
     setSelectedGoats((prev) =>

@@ -16,10 +16,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { getBreeding, createBreeding } from "../../lib/api";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  BRED: { bg: "bg-blue-100", text: "text-blue-700" },
-  PREGNANT: { bg: "bg-purple-100", text: "text-purple-700" },
-  BIRTHED: { bg: "bg-green-100", text: "text-green-700" },
-  FAILED: { bg: "bg-red-100", text: "text-red-700" },
+  BRED: { bg: "#dbeafe", text: "#1d4ed8" },
+  PREGNANT: { bg: "#f3e8ff", text: "#7e22ce" },
+  BIRTHED: { bg: "#dcfce7", text: "#15803d" },
+  FAILED: { bg: "#fee2e2", text: "#b91c1c" },
 };
 
 export default function BreedingScreen() {
@@ -110,8 +110,8 @@ export default function BreedingScreen() {
             return (
               <View className="bg-white mx-4 mb-3 rounded-2xl p-4 border border-gray-100">
                 <View className="flex-row items-center justify-between mb-2">
-                  <View className={`px-2.5 py-1 rounded-full ${sc.bg}`}>
-                    <Text className={`text-xs font-bold ${sc.text}`}>{item.status}</Text>
+                  <View style={{ paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: sc.bg }}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: sc.text }}>{item.status}</Text>
                   </View>
                   <Text className="text-xs text-gray-400">
                     {item.breedingDate ? formatDate(item.breedingDate) : ""}
