@@ -1,24 +1,43 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { jwtVerify } from "jose";
+import { getToken } from "next-auth/jwt";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isAdminRoute = req.nextUrl.pathname.startsWith("/dashboard/users");
-    
-    // Check admin-only routes
-    if (isAdminRoute && token?.role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token,
-    },
-  }
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-change-me"
 );
+
+export async function middleware(req: NextRequest) {
+  // Mobile app: check for Bearer token first
+  const authorization = req.headers.get("Authorization");
+  if (authorization?.startsWith("Bearer ")) {
+    const token = authorization.slice(7);
+    try {
+      await jwtVerify(token, JWT_SECRET);
+      return NextResponse.next();
+    } catch {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+  }
+
+  // Web app: check for NextAuth session
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+
+  if (!token) {
+    const isApiRoute = req.nextUrl.pathname.startsWith("/api/");
+    if (isApiRoute) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  // Admin-only route guard
+  const isAdminRoute = req.nextUrl.pathname.startsWith("/dashboard/users");
+  if (isAdminRoute && token.role !== "ADMIN") {
+    return NextResponse.redirect(new URL("/dashboard", req.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
