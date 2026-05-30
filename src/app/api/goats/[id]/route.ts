@@ -39,6 +39,19 @@ export async function GET(
           orderBy: { breedingDate: 'desc' },
           take: 10,
         },
+        penAssignments: {
+          where: { removedAt: null },
+          include: { pen: { select: { id: true, name: true, type: true } } },
+          take: 1,
+        },
+        bodyConditionScores: {
+          orderBy: { assessedAt: 'desc' },
+          take: 10,
+        },
+        famachaScores: {
+          orderBy: { assessedAt: 'desc' },
+          take: 10,
+        },
         recordedBy: { select: { id: true, name: true } },
       },
     });
@@ -76,6 +89,26 @@ export async function PUT(
         { success: false, error: 'Goat not found' },
         { status: 404 }
       );
+    }
+
+    // Handle special actions
+    if (body.addWeight) {
+      const { weight, notes } = body.addWeight;
+      await prisma.weightRecord.create({
+        data: { animalId: id, weight: parseFloat(weight), notes: notes || null },
+      });
+      if (body.addWeight.updateCurrent) {
+        await prisma.animal.update({ where: { id }, data: { weight: parseFloat(weight) } });
+      }
+      return NextResponse.json({ success: true, message: 'Weight recorded' });
+    }
+
+    if (body.addProduction) {
+      const { type: prodType, quantity, unit, notes } = body.addProduction;
+      await prisma.production.create({
+        data: { animalId: id, type: prodType, quantity: parseFloat(quantity), unit: unit || 'liters', notes: notes || null, recordedAt: new Date() },
+      });
+      return NextResponse.json({ success: true, message: 'Production recorded' });
     }
 
     const goat = await prisma.animal.update({

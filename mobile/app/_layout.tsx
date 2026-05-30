@@ -18,18 +18,16 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="login" />
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="goats/[id]"
-            options={{ headerShown: true, title: "Goat Details", headerTintColor: "#16a34a" }}
-          />
-          <Stack.Screen
-            name="goats/new"
-            options={{ headerShown: true, title: "Register Goat", headerTintColor: "#16a34a" }}
-          />
-          <Stack.Screen
-            name="goats/edit/[id]"
-            options={{ headerShown: true, title: "Edit Goat", headerTintColor: "#16a34a" }}
-          />
+          <Stack.Screen name="goats/list" />
+          <Stack.Screen name="goats/[id]" />
+          <Stack.Screen name="goats/new" />
+          <Stack.Screen name="goats/edit/[id]" />
+          <Stack.Screen name="pens" />
+          <Stack.Screen name="pens/[id]" />
+          <Stack.Screen name="feed" />
+          <Stack.Screen name="kidding" />
+          <Stack.Screen name="sales" />
+          <Stack.Screen name="mortality" />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>
