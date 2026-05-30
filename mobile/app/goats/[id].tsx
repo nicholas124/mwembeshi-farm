@@ -18,10 +18,10 @@ import * as ImagePicker from "expo-image-picker";
 import {
   getGoat, updateGoat, createTreatment,
   createSale, createMortality, createAssessment,
-  uploadGoatPhoto, deleteGoatPhoto,
+  getGoatPhotos, uploadGoatPhoto, deleteGoatPhoto,
 } from "../../lib/api";
 
-type TabType = "info" | "health" | "weights" | "assess" | "lineage";
+type TabType = "info" | "health" | "weights" | "assess" | "lineage" | "photos";
 type ModalType = "weight" | "treatment" | "sell" | "dead" | "assess" | null;
 
 const DEATH_CAUSES = [
@@ -65,51 +65,6 @@ export default function GoatDetailScreen() {
   const [modal, setModal] = useState<ModalType>(null);
   const queryClient = useQueryClient();
 
-  const [photoUploading, setPhotoUploading] = useState(false);
-
-  async function handlePhotoChange() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert("Permission needed", "Allow access to your photo library to add a goat photo.");
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-      base64: true,
-    });
-    if (result.canceled || !result.assets[0].base64) return;
-    const { base64, mimeType } = result.assets[0];
-    setPhotoUploading(true);
-    try {
-      await uploadGoatPhoto(id!, base64!, mimeType || "image/jpeg");
-      queryClient.invalidateQueries({ queryKey: ["goat", id] });
-    } catch (e: any) {
-      Alert.alert("Error", e.message);
-    } finally {
-      setPhotoUploading(false);
-    }
-  }
-
-  async function handlePhotoDelete() {
-    Alert.alert("Remove Photo", "Remove this goat's photo?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Remove", style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteGoatPhoto(id!);
-            queryClient.invalidateQueries({ queryKey: ["goat", id] });
-          } catch (e: any) {
-            Alert.alert("Error", e.message);
-          }
-        },
-      },
-    ]);
-  }
-
   const { data: goatResponse, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["goat", id],
     queryFn: () => getGoat(id!),
@@ -151,29 +106,6 @@ export default function GoatDetailScreen() {
         {/* Profile Header */}
         <View style={{ backgroundColor: "white", padding: 20, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            {/* Photo avatar */}
-            <TouchableOpacity onPress={handlePhotoChange} activeOpacity={0.8} style={{ marginRight: 16 }}>
-              {photoUploading ? (
-                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "#f3f4f6", alignItems: "center", justifyContent: "center" }}>
-                  <ActivityIndicator size="small" color="#16a34a" />
-                </View>
-              ) : goat.photo ? (
-                <View>
-                  <Image source={{ uri: goat.photo }} style={{ width: 72, height: 72, borderRadius: 36 }} />
-                  <TouchableOpacity
-                    onPress={(e) => { e.stopPropagation?.(); handlePhotoDelete(); }}
-                    style={{ position: "absolute", top: -4, right: -4, backgroundColor: "#ef4444", borderRadius: 10, width: 20, height: 20, alignItems: "center", justifyContent: "center" }}
-                  >
-                    <Ionicons name="close" size={12} color="white" />
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: isFemale ? "#fdf2f8" : "#eff6ff", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: isFemale ? "#fbcfe8" : "#bfdbfe", borderStyle: "dashed" }}>
-                  <Ionicons name="camera-outline" size={24} color={isFemale ? "#ec4899" : "#3b82f6"} />
-                </View>
-              )}
-            </TouchableOpacity>
-
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons
@@ -234,7 +166,7 @@ export default function GoatDetailScreen() {
 
         {/* Tabs */}
         <View style={{ flexDirection: "row", backgroundColor: "white", borderBottomWidth: 1, borderBottomColor: "#f3f4f6" }}>
-          {(["info", "health", "weights", "assess", "lineage"] as TabType[]).map((t) => (
+          {(["info", "health", "weights", "assess", "lineage", "photos"] as TabType[]).map((t) => (
             <TouchableOpacity
               key={t}
               onPress={() => setActiveTab(t)}
@@ -264,6 +196,7 @@ export default function GoatDetailScreen() {
             />
           )}
           {activeTab === "lineage" && <LineageTab goat={goat} offspring={offspring} />}
+          {activeTab === "photos" && <PhotosTab goatId={id!} queryClient={queryClient} />}
         </View>
       </ScrollView>
 
@@ -759,3 +692,151 @@ const inputStyle = {
   color: "#111827",
   marginBottom: 16,
 };
+
+function PhotosTab({ goatId, queryClient }: { goatId: string; queryClient: any }) {
+  const [uploading, setUploading] = useState(false);
+  const [caption, setCaption] = useState("");
+  const [showCaptionFor, setShowCaptionFor] = useState<string | null>(null);
+
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["goat-photos", goatId],
+    queryFn: () => getGoatPhotos(goatId),
+  });
+
+  const photos: any[] = data?.photos || [];
+
+  async function handleAdd() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Allow photo library access to upload growth photos.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      quality: 0.75,
+      base64: true,
+    });
+    if (result.canceled || !result.assets[0].base64) return;
+
+    const { base64, mimeType } = result.assets[0];
+    setUploading(true);
+    try {
+      await uploadGoatPhoto(goatId, base64!, mimeType || "image/jpeg");
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["goat-photos", goatId] });
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleDelete(photo: any) {
+    Alert.alert(
+      "Delete Photo",
+      `Remove this photo from ${new Date(photo.takenAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete", style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteGoatPhoto(goatId, photo.id);
+              refetch();
+            } catch (e: any) {
+              Alert.alert("Error", e.message);
+            }
+          },
+        },
+      ]
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <View style={{ alignItems: "center", paddingVertical: 40 }}>
+        <ActivityIndicator color="#16a34a" />
+      </View>
+    );
+  }
+
+  return (
+    <View>
+      {/* Add Photo Button */}
+      <TouchableOpacity
+        onPress={handleAdd}
+        disabled={uploading}
+        activeOpacity={0.8}
+        style={{
+          flexDirection: "row", alignItems: "center", justifyContent: "center",
+          gap: 8, backgroundColor: "#f0fdf4", borderRadius: 14, padding: 14,
+          borderWidth: 1.5, borderColor: "#bbf7d0", borderStyle: "dashed",
+          marginBottom: 16,
+        }}
+      >
+        {uploading
+          ? <ActivityIndicator size="small" color="#16a34a" />
+          : <Ionicons name="camera-outline" size={20} color="#16a34a" />
+        }
+        <Text style={{ fontSize: 14, fontWeight: "600", color: "#16a34a" }}>
+          {uploading ? "Uploading..." : "Add Growth Photo"}
+        </Text>
+      </TouchableOpacity>
+
+      {photos.length === 0 ? (
+        <View style={{ alignItems: "center", paddingVertical: 40 }}>
+          <Ionicons name="images-outline" size={48} color="#d1d5db" />
+          <Text style={{ color: "#9ca3af", marginTop: 12, fontSize: 14 }}>No photos yet</Text>
+          <Text style={{ color: "#d1d5db", fontSize: 12, marginTop: 4 }}>
+            Add photos regularly to track visual growth
+          </Text>
+        </View>
+      ) : (
+        photos.map((photo: any, index: number) => (
+          <View
+            key={photo.id}
+            style={{
+              backgroundColor: "white", borderRadius: 16, marginBottom: 14,
+              borderWidth: 1, borderColor: "#f3f4f6", overflow: "hidden",
+            }}
+          >
+            {/* Timeline connector */}
+            <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingTop: 12, paddingBottom: 8 }}>
+              <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: "#16a34a", marginRight: 8 }} />
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#374151" }}>
+                {new Date(photo.takenAt).toLocaleDateString("en-GB", {
+                  day: "numeric", month: "long", year: "numeric",
+                })}
+              </Text>
+              {index === 0 && (
+                <View style={{ marginLeft: 8, backgroundColor: "#f0fdf4", paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#16a34a" }}>LATEST</Text>
+                </View>
+              )}
+              <TouchableOpacity
+                onPress={() => handleDelete(photo)}
+                style={{ marginLeft: "auto" }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="trash-outline" size={16} color="#ef4444" />
+              </TouchableOpacity>
+            </View>
+
+            <Image
+              source={{ uri: photo.photoUrl }}
+              style={{ width: "100%", height: 260 }}
+              resizeMode="cover"
+            />
+
+            {photo.caption ? (
+              <Text style={{ fontSize: 13, color: "#6b7280", padding: 12, paddingTop: 10 }}>
+                {photo.caption}
+              </Text>
+            ) : null}
+          </View>
+        ))
+      )}
+    </View>
+  );
+}

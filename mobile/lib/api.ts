@@ -199,15 +199,19 @@ export async function createAssessment(animalId: string, data: any) {
   });
 }
 
-// ─── Photo Upload ─────────────────────────────────────────────────────────────
+// ─── Growth Photos ───────────────────────────────────────────────────────────
 
-export async function uploadGoatPhoto(id: string, base64: string, mimeType: string) {
-  return request<any>(`/api/goats/${id}/photo`, {
+export async function getGoatPhotos(id: string) {
+  return request<any>(`/api/goats/${id}/photos`);
+}
+
+export async function uploadGoatPhoto(id: string, base64: string, mimeType: string, caption?: string, takenAt?: string) {
+  return request<any>(`/api/goats/${id}/photos`, {
     method: "POST",
-    body: JSON.stringify({ base64, mimeType }),
+    body: JSON.stringify({ base64, mimeType, caption, takenAt }),
   });
 }
 
-export async function deleteGoatPhoto(id: string) {
-  return request<any>(`/api/goats/${id}/photo`, { method: "DELETE" });
+export async function deleteGoatPhoto(goatId: string, photoId: string) {
+  return request<any>(`/api/goats/${goatId}/photos/${photoId}`, { method: "DELETE" });
 }

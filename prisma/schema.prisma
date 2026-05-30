@@ -101,6 +101,7 @@ model Animal {
   mortalityRecord     MortalityRecord?
   bodyConditionScores BodyConditionScore[]
   famachaScores       FAMACHAScore[]
+  photos              GoatPhoto[]
 
   @@index([type, status])
   @@index([tag])
@@ -219,6 +220,19 @@ model BreedingRecord {
 
   @@index([animalId, breedingDate])
   @@map("breeding_records")
+}
+
+model GoatPhoto {
+  id        String   @id @default(cuid())
+  animalId  String
+  animal    Animal   @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  photoUrl  String
+  caption   String?
+  takenAt   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([animalId, takenAt])
+  @@map("goat_photos")
 }
 
 enum BreedingStatus {
