@@ -158,6 +158,15 @@ export default function CropDetailScreen() {
               {planting.field?.name} · {parseFloat(planting.areaPlanted).toFixed(2)} ha
             </Text>
           </View>
+          <TouchableOpacity
+            onPress={() => router.push(`/crops/edit/${id}` as any)}
+            style={{
+              backgroundColor: "rgba(255,255,255,0.2)",
+              borderRadius: 10, padding: 8,
+            }}
+          >
+            <Ionicons name="pencil" size={18} color="white" />
+          </TouchableOpacity>
         </View>
 
         {/* Status + Health row */}
