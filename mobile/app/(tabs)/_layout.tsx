@@ -63,17 +63,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="tracker"
+        name="crops"
         options={{
-          title: "Daily Log",
+          title: "Crops",
           headerShown: true,
-          headerTitle: "Daily Tracker",
+          headerTitle: "Crop Management",
           headerStyle: { backgroundColor: "#16a34a" },
           headerTintColor: "white",
           headerTitleStyle: { fontWeight: "bold" },
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="leaf" size={size} color={color} />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="tracker"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen

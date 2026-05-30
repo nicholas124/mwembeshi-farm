@@ -215,3 +215,69 @@ export async function uploadGoatPhoto(id: string, base64: string, mimeType: stri
 export async function deleteGoatPhoto(goatId: string, photoId: string) {
   return request<any>(`/api/goats/${goatId}/photos/${photoId}`, { method: "DELETE" });
 }
+
+// ─── Crops ────────────────────────────────────────────────────────────────────
+
+export async function getCrops(params?: Record<string, string>) {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/crops${query}`);
+}
+
+export async function getCrop(id: string) {
+  return request<any>(`/api/crops/${id}`);
+}
+
+export async function createCrop(data: any) {
+  return request<any>("/api/crops", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateCrop(id: string, data: any) {
+  return request<any>(`/api/crops/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function createCropActivity(plantingId: string, data: any) {
+  return request<any>(`/api/crops/${plantingId}/activities`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createCropInput(plantingId: string, data: any) {
+  return request<any>(`/api/crops/${plantingId}/inputs`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function createCropHarvest(plantingId: string, data: any) {
+  return request<any>(`/api/crops/${plantingId}/harvests`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getCropSprayPlans(plantingId: string) {
+  return request<any>(`/api/crops/${plantingId}/spray-plans`);
+}
+
+export async function createCropSprayPlan(plantingId: string, data: any) {
+  return request<any>(`/api/crops/${plantingId}/spray-plans`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateSprayPlan(plantingId: string, planId: string, data: any) {
+  return request<any>(`/api/crops/${plantingId}/spray-plans/${planId}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getCropTypes() {
+  return request<any>("/api/crop-types");
+}
+
+export async function getFields() {
+  return request<any>("/api/fields");
+}
