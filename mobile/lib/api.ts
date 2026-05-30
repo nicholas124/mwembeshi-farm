@@ -198,3 +198,16 @@ export async function createAssessment(animalId: string, data: any) {
     body: JSON.stringify(data),
   });
 }
+
+// ─── Photo Upload ─────────────────────────────────────────────────────────────
+
+export async function uploadGoatPhoto(id: string, base64: string, mimeType: string) {
+  return request<any>(`/api/goats/${id}/photo`, {
+    method: "POST",
+    body: JSON.stringify({ base64, mimeType }),
+  });
+}
+
+export async function deleteGoatPhoto(id: string) {
+  return request<any>(`/api/goats/${id}/photo`, { method: "DELETE" });
+}

@@ -9,13 +9,16 @@ import {
   Alert,
   Modal,
   TextInput,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import {
   getGoat, updateGoat, createTreatment,
   createSale, createMortality, createAssessment,
+  uploadGoatPhoto, deleteGoatPhoto,
 } from "../../lib/api";
 
 type TabType = "info" | "health" | "weights" | "assess" | "lineage";
@@ -62,6 +65,51 @@ export default function GoatDetailScreen() {
   const [modal, setModal] = useState<ModalType>(null);
   const queryClient = useQueryClient();
 
+  const [photoUploading, setPhotoUploading] = useState(false);
+
+  async function handlePhotoChange() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert("Permission needed", "Allow access to your photo library to add a goat photo.");
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+      base64: true,
+    });
+    if (result.canceled || !result.assets[0].base64) return;
+    const { base64, mimeType } = result.assets[0];
+    setPhotoUploading(true);
+    try {
+      await uploadGoatPhoto(id!, base64!, mimeType || "image/jpeg");
+      queryClient.invalidateQueries({ queryKey: ["goat", id] });
+    } catch (e: any) {
+      Alert.alert("Error", e.message);
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
+
+  async function handlePhotoDelete() {
+    Alert.alert("Remove Photo", "Remove this goat's photo?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove", style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteGoatPhoto(id!);
+            queryClient.invalidateQueries({ queryKey: ["goat", id] });
+          } catch (e: any) {
+            Alert.alert("Error", e.message);
+          }
+        },
+      },
+    ]);
+  }
+
   const { data: goatResponse, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["goat", id],
     queryFn: () => getGoat(id!),
@@ -103,6 +151,29 @@ export default function GoatDetailScreen() {
         {/* Profile Header */}
         <View style={{ backgroundColor: "white", padding: 20, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            {/* Photo avatar */}
+            <TouchableOpacity onPress={handlePhotoChange} activeOpacity={0.8} style={{ marginRight: 16 }}>
+              {photoUploading ? (
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: "#f3f4f6", alignItems: "center", justifyContent: "center" }}>
+                  <ActivityIndicator size="small" color="#16a34a" />
+                </View>
+              ) : goat.photo ? (
+                <View>
+                  <Image source={{ uri: goat.photo }} style={{ width: 72, height: 72, borderRadius: 36 }} />
+                  <TouchableOpacity
+                    onPress={(e) => { e.stopPropagation?.(); handlePhotoDelete(); }}
+                    style={{ position: "absolute", top: -4, right: -4, backgroundColor: "#ef4444", borderRadius: 10, width: 20, height: 20, alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Ionicons name="close" size={12} color="white" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: isFemale ? "#fdf2f8" : "#eff6ff", alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: isFemale ? "#fbcfe8" : "#bfdbfe", borderStyle: "dashed" }}>
+                  <Ionicons name="camera-outline" size={24} color={isFemale ? "#ec4899" : "#3b82f6"} />
+                </View>
+              )}
+            </TouchableOpacity>
+
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Ionicons
