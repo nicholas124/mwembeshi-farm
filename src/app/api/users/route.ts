@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions, hashPassword } from "@/lib/auth";
+import { getRequestUser, hashPassword } from "@/lib/auth";
 import { z } from "zod";
 
 // GET - List all users
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "ADMIN") {
+    const requestUser = await getRequestUser(request);
+
+    if (!requestUser || requestUser.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -102,9 +101,9 @@ const createUserSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "ADMIN") {
+    const requestUser = await getRequestUser(request);
+
+    if (!requestUser || requestUser.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }

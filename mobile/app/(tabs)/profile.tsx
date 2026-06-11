@@ -109,7 +109,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="settings-outline"
             label="Settings"
-            onPress={() => Alert.alert("Coming Soon", "Settings will be available in the next update.")}
+            onPress={() => router.push("/settings" as any)}
           />
           <MenuItem
             icon="help-circle-outline"

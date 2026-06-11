@@ -1,8 +1,14 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { jwtVerify } from "jose";
+import { NextRequest } from "next/server";
 import { prisma } from "./prisma";
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.NEXTAUTH_SECRET || "fallback-secret-change-me"
+);
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as NextAuthOptions["adapter"],
@@ -87,4 +93,35 @@ export async function verifyPassword(
   hashedPassword: string
 ): Promise<boolean> {
   return bcrypt.compare(password, hashedPassword);
+}
+
+// Resolves the authenticated user from either a NextAuth session (web) or a
+// mobile JWT bearer token (issued by /api/auth/mobile-login).
+export async function getRequestUser(
+  request: NextRequest
+): Promise<{ id: string; email: string; role: string } | null> {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    return {
+      id: session.user.id,
+      email: session.user.email ?? "",
+      role: session.user.role,
+    };
+  }
+
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      const { payload } = await jwtVerify(authHeader.slice(7), JWT_SECRET);
+      return {
+        id: payload.id as string,
+        email: payload.email as string,
+        role: payload.role as string,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
 }

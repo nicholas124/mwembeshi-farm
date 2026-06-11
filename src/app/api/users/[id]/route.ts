@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
-import { authOptions, hashPassword } from "@/lib/auth";
+import { getRequestUser, hashPassword } from "@/lib/auth";
 import { z } from "zod";
 
 // GET - Get single user
@@ -10,9 +9,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "ADMIN") {
+    const requestUser = await getRequestUser(request);
+
+    if (!requestUser || requestUser.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -73,9 +72,9 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "ADMIN") {
+    const requestUser = await getRequestUser(request);
+
+    if (!requestUser || requestUser.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -83,7 +82,7 @@ export async function PATCH(
     }
 
     // Prevent admin from deactivating themselves
-    if (params.id === session.user.id) {
+    if (params.id === requestUser.id) {
       const body = await request.json();
       if (body.isActive === false) {
         return NextResponse.json(
@@ -160,9 +159,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session || session.user.role !== "ADMIN") {
+    const requestUser = await getRequestUser(request);
+
+    if (!requestUser || requestUser.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
@@ -170,7 +169,7 @@ export async function DELETE(
     }
 
     // Prevent admin from deleting themselves
-    if (params.id === session.user.id) {
+    if (params.id === requestUser.id) {
       return NextResponse.json(
         { error: "You cannot delete your own account" },
         { status: 400 }

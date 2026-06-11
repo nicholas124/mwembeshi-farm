@@ -278,6 +278,72 @@ export async function getCropTypes() {
   return request<any>("/api/crop-types");
 }
 
+export async function createCropType(data: any) {
+  return request<any>("/api/crop-types", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateCropType(id: string, data: any) {
+  return request<any>(`/api/crop-types/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function deleteCropType(id: string) {
+  return request<any>(`/api/crop-types/${id}`, { method: "DELETE" });
+}
+
 export async function getFields() {
   return request<any>("/api/fields");
+}
+
+export async function createField(data: any) {
+  return request<any>("/api/fields", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateField(id: string, data: any) {
+  return request<any>(`/api/fields/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function deleteField(id: string) {
+  return request<any>(`/api/fields/${id}`, { method: "DELETE" });
+}
+
+// ─── Users (Admin) ────────────────────────────────────────────────────────────
+
+export async function getUsers(params?: Record<string, string>) {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/users${query}`);
+}
+
+export async function createUser(data: any) {
+  return request<any>("/api/users", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateUser(id: string, data: any) {
+  return request<any>(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(data) });
+}
+
+export async function deleteUser(id: string) {
+  return request<any>(`/api/users/${id}`, { method: "DELETE" });
+}
+
+// ─── Workers ──────────────────────────────────────────────────────────────────
+
+export async function getWorkers(params?: Record<string, string>) {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/workers${query}`);
+}
+
+export async function getWorker(id: string) {
+  return request<any>(`/api/workers/${id}`);
+}
+
+export async function createWorker(data: any) {
+  return request<any>("/api/workers", { method: "POST", body: JSON.stringify(data) });
+}
+
+export async function updateWorker(id: string, data: any) {
+  return request<any>(`/api/workers/${id}`, { method: "PUT", body: JSON.stringify(data) });
+}
+
+export async function deleteWorker(id: string) {
+  return request<any>(`/api/workers/${id}`, { method: "DELETE" });
 }

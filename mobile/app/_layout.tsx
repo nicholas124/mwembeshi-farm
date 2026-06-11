@@ -28,6 +28,12 @@ export default function RootLayout() {
           <Stack.Screen name="kidding" />
           <Stack.Screen name="sales" />
           <Stack.Screen name="mortality" />
+          <Stack.Screen name="settings/index" />
+          <Stack.Screen name="settings/users" />
+          <Stack.Screen name="settings/crop-types" />
+          <Stack.Screen name="settings/fields" />
+          <Stack.Screen name="settings/workers/index" />
+          <Stack.Screen name="settings/workers/[id]" />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>
