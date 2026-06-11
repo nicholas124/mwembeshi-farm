@@ -274,6 +274,12 @@ export async function updateSprayPlan(plantingId: string, planId: string, data: 
   });
 }
 
+export async function deleteSprayPlan(plantingId: string, planId: string) {
+  return request<any>(`/api/crops/${plantingId}/spray-plans/${planId}`, {
+    method: "DELETE",
+  });
+}
+
 export async function getCropTypes() {
   return request<any>("/api/crop-types");
 }

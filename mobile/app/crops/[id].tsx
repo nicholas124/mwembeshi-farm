@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useAuth } from "../../lib/auth-context";
 import {
   getCrop,
   getCropSprayPlans,
@@ -22,6 +23,7 @@ import {
   createCropHarvest,
   createCropSprayPlan,
   updateSprayPlan,
+  deleteSprayPlan,
   updateCrop,
 } from "../../lib/api";
 
@@ -510,6 +512,12 @@ function SpraysTab({
   plantingId: string;
   onUpdate: () => void;
 }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPERVISOR";
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [editingPlan, setEditingPlan] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   async function markDone(plan: any) {
     Alert.alert("Mark Complete", `Mark "${plan.name}" as completed?`, [
       { text: "Cancel", style: "cancel" },
@@ -518,6 +526,26 @@ function SpraysTab({
         onPress: async () => {
           try {
             await updateSprayPlan(plantingId, plan.id, { status: "COMPLETED" });
+            setSelectedPlan(null);
+            onUpdate();
+          } catch (e: any) {
+            Alert.alert("Error", e.message);
+          }
+        },
+      },
+    ]);
+  }
+
+  function handleDelete(plan: any) {
+    Alert.alert("Delete Spray Plan", `Delete "${plan.name}"? This cannot be undone.`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteSprayPlan(plantingId, plan.id);
+            setSelectedPlan(null);
             onUpdate();
           } catch (e: any) {
             Alert.alert("Error", e.message);
@@ -537,68 +565,214 @@ function SpraysTab({
   }
 
   return (
-    <FlatList
-      data={sprayPlans}
-      keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-      renderItem={({ item }) => {
-        const sc = SPRAY_STATUS_CONFIG[item.status] || SPRAY_STATUS_CONFIG.PENDING;
-        const isOverdue = item.status === "PENDING" &&
-          new Date(item.scheduledDate) < new Date();
+    <>
+      <FlatList
+        data={sprayPlans}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        renderItem={({ item }) => {
+          const sc = SPRAY_STATUS_CONFIG[item.status] || SPRAY_STATUS_CONFIG.PENDING;
+          const isOverdue = item.status === "PENDING" &&
+            new Date(item.scheduledDate) < new Date();
 
-        return (
-          <View style={{
-            backgroundColor: "white", borderRadius: 14, padding: 14,
-            marginBottom: 10, borderWidth: 1,
-            borderColor: isOverdue ? "#fecaca" : "#f3f4f6",
-          }}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: 14, fontWeight: "700", color: "#111827" }}>{item.name}</Text>
-                <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{item.pesticide}</Text>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-                <View style={{
-                  paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
-                  backgroundColor: isOverdue ? "#fef2f2" : sc.bg,
-                }}>
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: isOverdue ? "#ef4444" : sc.color }}>
-                    {isOverdue ? "OVERDUE" : sc.label}
-                  </Text>
+          return (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setSelectedPlan(item)}
+              style={{
+                backgroundColor: "white", borderRadius: 14, padding: 14,
+                marginBottom: 10, borderWidth: 1,
+                borderColor: isOverdue ? "#fecaca" : "#f3f4f6",
+              }}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 14, fontWeight: "700", color: "#111827" }}>{item.name}</Text>
+                  <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 2 }}>{item.pesticide}</Text>
                 </View>
-                {item.status === "PENDING" && (
-                  <TouchableOpacity onPress={() => markDone(item)}>
-                    <Ionicons name="checkmark-circle-outline" size={22} color="#16a34a" />
-                  </TouchableOpacity>
-                )}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                  <View style={{
+                    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10,
+                    backgroundColor: isOverdue ? "#fef2f2" : sc.bg,
+                  }}>
+                    <Text style={{ fontSize: 11, fontWeight: "700", color: isOverdue ? "#ef4444" : sc.color }}>
+                      {isOverdue ? "OVERDUE" : sc.label}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#d1d5db" />
+                </View>
               </View>
-            </View>
 
-            <View style={{ flexDirection: "row", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
-                <Text style={{ fontSize: 12, color: "#6b7280" }}>{fmt(item.scheduledDate)}</Text>
+              <View style={{ flexDirection: "row", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Ionicons name="calendar-outline" size={13} color="#9ca3af" />
+                  <Text style={{ fontSize: 12, color: "#6b7280" }}>{fmt(item.scheduledDate)}</Text>
+                </View>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                  <Ionicons name="beaker-outline" size={13} color="#9ca3af" />
+                  <Text style={{ fontSize: 12, color: "#6b7280" }}>{item.dosage}</Text>
+                </View>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                <Ionicons name="beaker-outline" size={13} color="#9ca3af" />
-                <Text style={{ fontSize: 12, color: "#6b7280" }}>{item.dosage}</Text>
-              </View>
-            </View>
 
-            {item.targetPest && (
-              <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-                Target: {item.targetPest}
+              {item.targetPest && (
+                <Text style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
+                  Target: {item.targetPest}
+                </Text>
+              )}
+              {item.completedDate && (
+                <Text style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>
+                  Completed: {fmt(item.completedDate)}
+                </Text>
+              )}
+            </TouchableOpacity>
+          );
+        }}
+      />
+
+      <SprayDetailModal
+        visible={!!selectedPlan}
+        plan={selectedPlan}
+        isAdmin={isAdmin}
+        onClose={() => setSelectedPlan(null)}
+        onMarkDone={() => markDone(selectedPlan)}
+        onEdit={() => {
+          setEditingPlan(selectedPlan);
+          setSelectedPlan(null);
+          setShowEditModal(true);
+        }}
+        onDelete={() => handleDelete(selectedPlan)}
+      />
+
+      <SprayModal
+        visible={showEditModal}
+        plantingId={plantingId}
+        editingPlan={editingPlan}
+        onClose={() => { setShowEditModal(false); setEditingPlan(null); }}
+        onSuccess={() => { setShowEditModal(false); setEditingPlan(null); onUpdate(); }}
+      />
+    </>
+  );
+}
+
+function detailRow(icon: string, label: string, value: string) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "flex-start", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f9fafb", gap: 10 }}>
+      <Ionicons name={icon as any} size={16} color="#9ca3af" style={{ marginTop: 2 }} />
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 11, color: "#9ca3af", fontWeight: "600" }}>{label}</Text>
+        <Text style={{ fontSize: 14, color: "#111827", fontWeight: "500", marginTop: 2 }}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function SprayDetailModal({
+  visible, plan, isAdmin, onClose, onMarkDone, onEdit, onDelete,
+}: {
+  visible: boolean;
+  plan: any;
+  isAdmin: boolean;
+  onClose: () => void;
+  onMarkDone: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  if (!plan) return null;
+
+  const sc = SPRAY_STATUS_CONFIG[plan.status] || SPRAY_STATUS_CONFIG.PENDING;
+  const isOverdue = plan.status === "PENDING" && new Date(plan.scheduledDate) < new Date();
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "white" }}>
+        <View style={{
+          flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+          paddingHorizontal: 16, paddingVertical: 16,
+          borderBottomWidth: 1, borderBottomColor: "#f3f4f6",
+        }}>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color="#6b7280" />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 17, fontWeight: "700" }}>Spray Plan</Text>
+          {isAdmin ? (
+            <TouchableOpacity onPress={onEdit}>
+              <Text style={{ color: "#16a34a", fontSize: 16, fontWeight: "600" }}>Edit</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 24 }} />
+          )}
+        </View>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+          <Text style={{ fontSize: 20, fontWeight: "800", color: "#111827" }}>{plan.name}</Text>
+          <View style={{ flexDirection: "row", marginTop: 8, marginBottom: 4 }}>
+            <View style={{
+              paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10,
+              backgroundColor: isOverdue ? "#fef2f2" : sc.bg,
+            }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: isOverdue ? "#ef4444" : sc.color }}>
+                {isOverdue ? "OVERDUE" : sc.label}
               </Text>
+            </View>
+          </View>
+
+          <View style={{ marginTop: 8 }}>
+            {detailRow("calendar-outline", "Scheduled Date", fmt(plan.scheduledDate))}
+            {detailRow("flask-outline", "Pesticide / Chemical", plan.pesticide)}
+            {plan.targetPest && detailRow("bug-outline", "Target Pest / Disease", plan.targetPest)}
+            {detailRow("beaker-outline", "Dosage", plan.dosage)}
+            {plan.applicationMethod && detailRow("water-outline", "Application Method", plan.applicationMethod)}
+            {plan.weatherConditions && detailRow("partly-sunny-outline", "Weather Conditions", plan.weatherConditions)}
+          </View>
+
+          {plan.safetyPrecautions && (
+            <View style={{ backgroundColor: "#fffbeb", borderRadius: 12, padding: 14, marginTop: 12, borderWidth: 1, borderColor: "#fde68a" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                <Ionicons name="warning-outline" size={16} color="#d97706" />
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#d97706" }}>Safety Precautions</Text>
+              </View>
+              <Text style={{ fontSize: 13, color: "#92400e", lineHeight: 19 }}>{plan.safetyPrecautions}</Text>
+            </View>
+          )}
+
+          {plan.notes && (
+            <View style={{ marginTop: 12 }}>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: "#9ca3af", marginBottom: 6, textTransform: "uppercase" }}>Notes</Text>
+              <Text style={{ fontSize: 14, color: "#374151", lineHeight: 21 }}>{plan.notes}</Text>
+            </View>
+          )}
+
+          {plan.completedDate && (
+            <View style={{ marginTop: 12, backgroundColor: "#f0fdf4", borderRadius: 12, padding: 14 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#16a34a" }}>Completed {fmt(plan.completedDate)}</Text>
+              {plan.completedBy?.name && (
+                <Text style={{ fontSize: 12, color: "#16a34a", marginTop: 2 }}>by {plan.completedBy.name}</Text>
+              )}
+            </View>
+          )}
+
+          <View style={{ marginTop: 24, gap: 10 }}>
+            {plan.status === "PENDING" && (
+              <TouchableOpacity
+                onPress={onMarkDone}
+                style={{ backgroundColor: "#16a34a", borderRadius: 12, padding: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+              >
+                <Ionicons name="checkmark-circle-outline" size={18} color="white" />
+                <Text style={{ color: "white", fontWeight: "700", fontSize: 14 }}>Mark Complete</Text>
+              </TouchableOpacity>
             )}
-            {item.completedDate && (
-              <Text style={{ fontSize: 12, color: "#16a34a", marginTop: 4 }}>
-                Completed: {fmt(item.completedDate)}
-              </Text>
+            {isAdmin && (
+              <TouchableOpacity
+                onPress={onDelete}
+                style={{ borderWidth: 1.5, borderColor: "#fee2e2", borderRadius: 12, padding: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+              >
+                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                <Text style={{ color: "#ef4444", fontWeight: "700", fontSize: 14 }}>Delete Spray Plan</Text>
+              </TouchableOpacity>
             )}
           </View>
-        );
-      }}
-    />
+        </ScrollView>
+      </View>
+    </Modal>
   );
 }
 
@@ -931,33 +1105,63 @@ function HarvestModal({ visible, plantingId, onClose, onSuccess }: any) {
   );
 }
 
-function SprayModal({ visible, plantingId, onClose, onSuccess }: any) {
+function SprayModal({ visible, plantingId, editingPlan, onClose, onSuccess }: any) {
   const [name, setName] = useState("");
   const [pesticide, setPesticide] = useState("");
   const [targetPest, setTargetPest] = useState("");
   const [dosage, setDosage] = useState("");
+  const [scheduledDate, setScheduledDate] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!visible) return;
+    if (editingPlan) {
+      setName(editingPlan.name || "");
+      setPesticide(editingPlan.pesticide || "");
+      setTargetPest(editingPlan.targetPest || "");
+      setDosage(editingPlan.dosage || "");
+      setScheduledDate(editingPlan.scheduledDate ? editingPlan.scheduledDate.slice(0, 10) : "");
+      setNotes(editingPlan.notes || "");
+    } else {
+      setName(""); setPesticide(""); setTargetPest(""); setDosage(""); setScheduledDate(""); setNotes("");
+    }
+  }, [editingPlan, visible]);
 
   async function handleSubmit() {
     if (!name || !pesticide || !dosage) {
       Alert.alert("Error", "Name, pesticide, and dosage are required");
       return;
     }
+    if (scheduledDate && isNaN(new Date(scheduledDate).getTime())) {
+      Alert.alert("Error", "Scheduled date must be in YYYY-MM-DD format");
+      return;
+    }
     setLoading(true);
     try {
-      const scheduled = new Date();
-      scheduled.setDate(scheduled.getDate() + 7);
-      await createCropSprayPlan(plantingId, {
-        name,
-        pesticide,
-        targetPest: targetPest || undefined,
-        dosage,
-        scheduledDate: scheduled.toISOString(),
-        notes: notes || undefined,
-      });
-      Alert.alert("Success", "Spray plan created");
-      setName(""); setPesticide(""); setTargetPest(""); setDosage(""); setNotes("");
+      if (editingPlan) {
+        await updateSprayPlan(plantingId, editingPlan.id, {
+          name,
+          pesticide,
+          targetPest: targetPest || undefined,
+          dosage,
+          scheduledDate: scheduledDate ? new Date(scheduledDate).toISOString() : undefined,
+          notes: notes || undefined,
+        });
+        Alert.alert("Success", "Spray plan updated");
+      } else {
+        const scheduled = scheduledDate ? new Date(scheduledDate) : new Date(Date.now() + 7 * 86400000);
+        await createCropSprayPlan(plantingId, {
+          name,
+          pesticide,
+          targetPest: targetPest || undefined,
+          dosage,
+          scheduledDate: scheduled.toISOString(),
+          notes: notes || undefined,
+        });
+        Alert.alert("Success", "Spray plan created");
+        setName(""); setPesticide(""); setTargetPest(""); setDosage(""); setNotes(""); setScheduledDate("");
+      }
       onSuccess();
     } catch (e: any) {
       Alert.alert("Error", e.message);
@@ -969,7 +1173,7 @@ function SprayModal({ visible, plantingId, onClose, onSuccess }: any) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
       <View style={{ flex: 1, backgroundColor: "white" }}>
-        <ModalHeader title="Add Spray Plan" onClose={onClose} onSave={handleSubmit} loading={loading} />
+        <ModalHeader title={editingPlan ? "Edit Spray Plan" : "Add Spray Plan"} onClose={onClose} onSave={handleSubmit} loading={loading} />
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <Text style={mLabel}>Plan Name</Text>
           <TextInput style={mInput} placeholder="e.g. Week 3 Pest Control" placeholderTextColor="#9ca3af"
@@ -983,6 +1187,9 @@ function SprayModal({ visible, plantingId, onClose, onSuccess }: any) {
           <Text style={mLabel}>Dosage</Text>
           <TextInput style={mInput} placeholder="e.g. 50ml per 20L water" placeholderTextColor="#9ca3af"
             value={dosage} onChangeText={setDosage} />
+          <Text style={mLabel}>Scheduled Date</Text>
+          <TextInput style={mInput} placeholder="YYYY-MM-DD" placeholderTextColor="#9ca3af"
+            value={scheduledDate} onChangeText={setScheduledDate} />
           <Text style={mLabel}>Notes / Instructions</Text>
           <TextInput style={[mInput, { minHeight: 70, textAlignVertical: "top" }]}
             placeholder="Safety notes, timing, etc." placeholderTextColor="#9ca3af"
